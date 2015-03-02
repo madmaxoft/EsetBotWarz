@@ -1,0 +1,17 @@
+# MSVC project files:
+*.sln
+*.vcxproj
+*.filters
+*.user
+*.sdf
+*.opensdf
+*.suo
+
+# MSVC build files:
+Network.dir/
+*.ilk
+
+# CMake-generated files:
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake

@@ -26,3 +26,24 @@
 *.exe
 *.out
 *.app
+
+# MSVC project files:
+*.vcxproj
+*.filters
+*.user
+*.sln
+*.sdf
+*.opensdf
+*.suo
+
+# MSVC build files:
+Win32/
+EsetBotWarz.dir/
+*.pdb
+*.ilk
+ipch/
+
+# CMake-generated files:
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
