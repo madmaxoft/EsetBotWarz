@@ -2,6 +2,11 @@
 cmake_minimum_required (VERSION 2.6)
 project (Network)
 
+# Add the flags for c++11 support:
+if (CMAKE_COMPILER_IS_GNUCXX)
+	add_definitions("-std=c++11")
+endif()
+
 SET (SRCS
 	CriticalSection.cpp
 	Event.cpp

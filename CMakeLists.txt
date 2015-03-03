@@ -43,13 +43,13 @@ if (NOT EXISTS ${CMAKE_SOURCE_DIR}/lib/libevent/CMakeLists.txt)
 	message(FATAL_ERROR "LibEvent is missing in folder lib/libevent. Have you initialized and updated the submodules / downloaded the extra libraries?")
 endif()
 
+# Add proper includes for LibEvent's event-config.h header:
+include_directories(SYSTEM ${LIBEVENT_INCLUDE_DIRS})
+
 # Include all the libraries:
 add_subdirectory(lib/jsoncpp/)
 add_subdirectory(lib/libevent/)
 add_subdirectory(lib/Network/)
-
-# Add proper includes for LibEvent's event-config.h header:
-include_directories(SYSTEM ${LIBEVENT_INCLUDE_DIRS})
 
 
 

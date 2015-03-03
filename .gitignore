@@ -51,3 +51,7 @@ cmake_install.cmake
 # Runtime files:
 src/login.txt
 src/CommLogs/
+
+# Linux build files:
+Debug/
+Release/
