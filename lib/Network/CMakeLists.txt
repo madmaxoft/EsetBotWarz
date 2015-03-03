@@ -9,6 +9,7 @@ SET (SRCS
 	HostnameLookup.cpp
 	IPLookup.cpp
 	NetworkSingleton.cpp
+	ServerHandleImpl.cpp
 	StringUtils.cpp
 	TCPLinkImpl.cpp
 	UDPEndpointImpl.cpp

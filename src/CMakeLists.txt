@@ -8,13 +8,17 @@ include_directories (SYSTEM "${CMAKE_CURRENT_SOURCE_DIR}/..")
 
 SET (SRCS
 	BotWarzApp.cpp
+	Comm.cpp
 	Globals.cpp
 	Main.cpp
+	sha1.cpp
 )
 
 SET (HDRS
 	BotWarzApp.h
+	Comm.h
 	Globals.h
+	sha1.h
 )
 
 

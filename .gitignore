@@ -47,3 +47,7 @@ ipch/
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
+
+# Runtime files:
+src/login.txt
+src/CommLogs/
