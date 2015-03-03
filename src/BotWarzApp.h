@@ -10,6 +10,7 @@
 #pragma once
 
 #include "Comm.h"
+#include "lib/Network/Event.h"
 
 
 
@@ -26,9 +27,16 @@ public:
 	Returns the value that the process should return to the OS upon its exit. */
 	int run(bool a_ShouldLogComm, bool a_ShouldShowComm);
 
+	/** Notifies the app that it should terminate.
+	Wakes up the main thread to do the actual termination. */
+	void terminate(void);
+
 protected:
 	/** The communication interface to the server. */
 	Comm m_Comm;
+
+	/** Event that is signalled upon termination request. */
+	cEvent m_evtTerminate;
 };
 
 

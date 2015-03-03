@@ -11,7 +11,7 @@
 
 
 BotWarzApp::BotWarzApp(const AString a_LoginToken, const AString & a_LoginNick):
-	m_Comm(a_LoginToken, a_LoginNick)
+	m_Comm(a_LoginToken, a_LoginNick, *this)
 {
 	LOG("Login nick: %s", a_LoginNick.c_str());
 }
@@ -29,8 +29,22 @@ int BotWarzApp::run(bool a_ShouldLogComm, bool a_ShouldShowComm)
 		return 1;
 	}
 
-	// TODO
+	// Wait for the termination request:
+	m_evtTerminate.Wait();
+
+	// Stop everything:
+	m_Comm.stop();
+
 	return 0;
+}
+
+
+
+
+
+void BotWarzApp::terminate(void)
+{
+	m_evtTerminate.Set();
 }
 
 

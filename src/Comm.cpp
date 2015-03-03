@@ -10,6 +10,7 @@
 #include <sstream>
 #include "json/json.h"
 #include "sha1.h"
+#include "BotWarzApp.h"
 
 
 
@@ -45,18 +46,20 @@ protected:
 	virtual void OnRemoteClosed(void) override
 	{
 		LOG("Server closed the connection, terminating.");
-		// TODO
+		m_Comm.abortConnection();
 	}
 
 	virtual void OnConnected(cTCPLink & a_Link) override
 	{
 		// Nothing needed, server talks first
+		LOG("Connected to the server. Waiting for the handshake request.");
+		m_Comm.m_Status = Comm::csConnected;
 	}
 
 	virtual void OnError(int a_ErrorCode, const AString & a_ErrorMsg) override
 	{
 		LOGERROR("Error while connecting to the BotWarz server: %d (%s)", a_ErrorCode, a_ErrorMsg.c_str());
-		// TODO: Abort the Comm handshake
+		m_Comm.abortConnection();
 	}
 };
 
@@ -67,12 +70,14 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 // Comm:
 
-Comm::Comm(const AString a_LoginToken, const AString & a_LoginNick):
+Comm::Comm(const AString a_LoginToken, const AString & a_LoginNick, BotWarzApp & a_App):
+	m_App(a_App),
 	m_LoginToken(a_LoginToken),
 	m_LoginNick(a_LoginNick),
 	m_ShouldShowComm(false),
 	m_ShouldLogComm(false),
-	m_CommLogFile(nullptr)
+	m_CommLogFile(nullptr),
+	m_Status(csConnecting)
 {
 }
 
@@ -93,19 +98,32 @@ bool Comm::init(bool a_ShouldLogComm, bool a_ShouldShowComm)
 	auto callbacks = std::make_shared<Callbacks>(*this);
 	if (!cNetwork::Connect("botwarz.eset.com", 2000, callbacks, callbacks))
 	{
+		m_Status = csError;
 		LOGERROR("Cannot connect to server");
 		return false;
 	}
 
 	// Wait for the handshake to complete:
-	if (!waitForHandshakeCompletion())
+	m_evtHandshake.Wait();
+	if (m_Status == csError)
 	{
 		LOGERROR("Server handshake failed");
 		return false;
 	}
+	LOG("Server handshake completed. Waiting for a game to start.");
 
 	return true;
 }
+
+
+
+
+void Comm::stop(void)
+{
+	// Nothing needed yet
+	// TODO: wait for the update sender thread
+}
+
 
 
 
@@ -181,18 +199,6 @@ void Comm::openCommLogFile(void)
 
 
 
-bool Comm::waitForHandshakeCompletion(void)
-{
-	// TODO
-	AString line;
-	std::getline(std::cin, line);
-	return true;
-}
-
-
-
-
-
 void Comm::onIncomingData(const AString & a_Data)
 {
 	// Log to file, if requested:
@@ -257,8 +263,16 @@ void Comm::processLine(const AString & a_Line)
 		if (status == "socket_connected")
 		{
 			processSocketConnected(root);
-			return;
 		}
+		else if (status == "login_ok")
+		{
+			processLoginOK(root);
+		}
+		else if (status == "login_failed")
+		{
+			processLoginFailed(root);
+		}
+		return;
 	}
 }
 
@@ -296,7 +310,58 @@ void Comm::processSocketConnected(const Json::Value & a_Response)
 	ASSERT(hash.length() == 40);
 	root["login"]["hash"] = hash;
 	root["login"]["nickname"] = m_LoginNick;
+	m_Status = csWaitingForHandshake;
 	send(root);
+}
+
+
+
+
+
+void Comm::processLoginOK(const Json::Value & a_Response)
+{
+	if (m_Status != csWaitingForHandshake)
+	{
+		LOGERROR("%s: login_ok status received while status not WaitingForHandshake (exp %d, got %d). Aborting",
+			__FUNCTION__, csWaitingForHandshake, m_Status
+		);
+		abortConnection();
+		return;
+	}
+
+	m_Status = csIdle;
+	m_evtHandshake.Set();
+}
+
+
+
+
+
+void Comm::processLoginFailed(const Json::Value & a_Response)
+{
+	if (m_Status != csWaitingForHandshake)
+	{
+		LOGERROR("%s: login_failed status received while status not WaitingForHandshake (exp %d, got %d). Aborting",
+			__FUNCTION__, csWaitingForHandshake, m_Status
+		);
+		abortConnection();
+		return;
+	}
+
+	// Display the message presented by the server:
+	AString msg;
+	if (a_Response.isMember("msg"))
+	{
+		msg = a_Response["msg"].asString();
+	}
+	else
+	{
+		msg = "<No message given>";
+	}
+	LOGERROR("The server login failed: %s. Aborting.", msg.c_str());
+
+	// Abort the connection:
+	abortConnection();
 }
 
 
@@ -313,7 +378,18 @@ void Comm::abortConnection(void)
 		m_Link.reset();
 	}
 
-	// TODO: Terminate the program
+	// If we were waiting for a handshake, wake up the main thread:
+	if (m_Status == csWaitingForHandshake)
+	{
+		m_Status = csError;
+		m_evtHandshake.Set();
+	}
+
+	// Set the status to Error, so that the future operations fail:
+	m_Status = csError;
+
+	// Terminate the entire app:
+	m_App.terminate();
 }
 
 
