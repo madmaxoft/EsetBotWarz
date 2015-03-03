@@ -30,7 +30,7 @@ namespace Json
 class Comm
 {
 public:
-	Comm(const AString a_LoginToken, const AString & a_LoginNick, BotWarzApp & a_App);
+	Comm(BotWarzApp & a_App);
 
 	/** Initializes the subsystem.
 	If a_ShouldLogComm is true, all the communication with the server is logged into a file.
@@ -64,12 +64,6 @@ protected:
 
 	/** The owner App object. */
 	BotWarzApp & m_App;
-
-	/** The token to be used for login. */
-	AString m_LoginToken;
-
-	/** The nick to be used for login. */
-	AString m_LoginNick;
 
 	/** If true, all the communication with the server is sent to stdout. */
 	bool m_ShouldShowComm;
@@ -114,6 +108,15 @@ protected:
 
 	/** Processes the "status: login_failed" response, aborts the connection. */
 	void processLoginFailed(const Json::Value & a_Response);
+
+	/** Processes the "game" response, starting a new game. */
+	void processGame(const Json::Value & a_Response);
+
+	/** Processes the "play" response, updating the game board. */
+	void processPlay(const Json::Value & a_Response);
+
+	/** Processes the "result" response, terminating the game. */
+	void processResult(const Json::Value & a_Reponse);
 
 	/** Severs the connection to the server and shuts down the comm interface. */
 	void abortConnection(void);

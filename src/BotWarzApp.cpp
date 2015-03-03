@@ -11,7 +11,10 @@
 
 
 BotWarzApp::BotWarzApp(const AString a_LoginToken, const AString & a_LoginNick):
-	m_Comm(a_LoginToken, a_LoginNick, *this)
+	m_Board(*this),
+	m_Comm(*this),
+	m_LoginToken(a_LoginToken),
+	m_LoginNick(a_LoginNick)
 {
 	LOG("Login nick: %s", a_LoginNick.c_str());
 }
@@ -45,6 +48,24 @@ int BotWarzApp::run(bool a_ShouldLogComm, bool a_ShouldShowComm)
 void BotWarzApp::terminate(void)
 {
 	m_evtTerminate.Set();
+}
+
+
+
+
+
+void BotWarzApp::startGame(const Json::Value & a_GameData)
+{
+	m_Board.initialize(a_GameData);
+}
+
+
+
+
+
+void BotWarzApp::updateBoard(const Json::Value & a_GameData)
+{
+	m_Board.updateFromJson(a_GameData);
 }
 
 

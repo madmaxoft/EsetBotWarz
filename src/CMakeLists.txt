@@ -7,6 +7,8 @@ include_directories (SYSTEM "${CMAKE_CURRENT_SOURCE_DIR}/../lib/libevent/include
 include_directories (SYSTEM "${CMAKE_CURRENT_SOURCE_DIR}/..")
 
 SET (SRCS
+	Board.cpp
+	Bot.cpp
 	BotWarzApp.cpp
 	Comm.cpp
 	Globals.cpp
@@ -15,6 +17,8 @@ SET (SRCS
 )
 
 SET (HDRS
+	Board.h
+	Bot.cpp
 	BotWarzApp.h
 	Comm.h
 	Globals.h

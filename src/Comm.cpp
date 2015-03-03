@@ -70,10 +70,8 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 // Comm:
 
-Comm::Comm(const AString a_LoginToken, const AString & a_LoginNick, BotWarzApp & a_App):
+Comm::Comm(BotWarzApp & a_App):
 	m_App(a_App),
-	m_LoginToken(a_LoginToken),
-	m_LoginNick(a_LoginNick),
 	m_ShouldShowComm(false),
 	m_ShouldLogComm(false),
 	m_CommLogFile(nullptr),
@@ -272,8 +270,36 @@ void Comm::processLine(const AString & a_Line)
 		{
 			processLoginFailed(root);
 		}
+		else
+		{
+			// Log an unknown message, but keep going
+			LOGWARNING("%s: Received an unhandled \"status\" message: %s", __FUNCTION__, root["msg"].asCString());
+		}
 		return;
 	}
+
+	// Handle "game" replies:
+	if (root.isMember("game"))
+	{
+		processGame(root);
+		return;
+	}
+
+	// Handle "play" replies:
+	if (root.isMember("play"))
+	{
+		processPlay(root);
+		return;
+	}
+
+	// Handle "result" replies:
+	if (root.isMember("result"))
+	{
+		processResult(root);
+		return;
+	}
+
+	LOGWARNING("%s: Received an unknown message: %s", __FUNCTION__, a_Line.c_str());
 }
 
 
@@ -293,7 +319,7 @@ void Comm::processSocketConnected(const Json::Value & a_Response)
 
 	// Calculate the SHA1 checksum to send to the server:
 	unsigned char shaChecksum[20];
-	random += m_LoginToken;
+	random += m_App.getLoginToken();
 	sha1(reinterpret_cast<const unsigned char *>(random.data()), random.size(), shaChecksum);
 
 	// Convert to lowercase hex:
@@ -309,7 +335,7 @@ void Comm::processSocketConnected(const Json::Value & a_Response)
 	AString hash = shaHash.str();
 	ASSERT(hash.length() == 40);
 	root["login"]["hash"] = hash;
-	root["login"]["nickname"] = m_LoginNick;
+	root["login"]["nickname"] = m_App.getLoginNick();
 	m_Status = csWaitingForHandshake;
 	send(root);
 }
@@ -362,6 +388,64 @@ void Comm::processLoginFailed(const Json::Value & a_Response)
 
 	// Abort the connection:
 	abortConnection();
+}
+
+
+
+
+
+void Comm::processGame(const Json::Value & a_Response)
+{
+	if (m_Status != csIdle)
+	{
+		LOGERROR("%s: game started while not expecting it (status %d). Aborting.", __FUNCTION__, m_Status);
+		abortConnection();
+		return;
+	}
+
+	m_Status = csGame;
+	LOG("Starting game: %s against %s",
+		a_Response["game"]["players"][0]["nickname"].asCString(),
+		a_Response["game"]["players"][1]["nickname"].asCString()
+	);
+	m_App.startGame(a_Response["game"]);
+}
+
+
+
+
+
+void Comm::processPlay(const Json::Value & a_Response)
+{
+	if (m_Status != csGame)
+	{
+		LOGERROR("%s: Received a \"play\" response while not in a game (status %d). Aborting.",
+			__FUNCTION__, m_Status
+		);
+		abortConnection();
+		return;
+	}
+
+	m_App.updateBoard(a_Response["play"]);
+}
+
+
+
+
+
+void Comm::processResult(const Json::Value & a_Response)
+{
+	if (m_Status != csGame)
+	{
+		LOGERROR("%s: Received a \"play\" response while not in a game (status %d). Aborting.",
+			__FUNCTION__, m_Status
+		);
+		abortConnection();
+		return;
+	}
+	
+	LOG("Game finished. Winner: %s", a_Response["result"]["winner"]["nickname"].asCString());
+	m_Status = csIdle;
 }
 
 
