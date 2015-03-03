@@ -5,6 +5,8 @@ project (Network)
 # Add the flags for c++11 support:
 if (CMAKE_COMPILER_IS_GNUCXX)
 	add_definitions("-std=c++11")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+	add_definitions("-std=c++11")
 endif()
 
 SET (SRCS

@@ -40,6 +40,8 @@ if (MSVC)
 	set(CMAKE_MODULE_LINKER_FLAGS_RELEASE "${CMAKE_MODULE_LINKER_FLAGS_RELEASE} /DEBUG")
 elseif (CMAKE_COMPILER_IS_GNUCXX)
 	add_definitions("-std=c++11")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+	add_definitions("-std=c++11")
 endif()
 
 set(EXECUTABLE EsetBotWarz)
