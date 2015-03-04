@@ -65,6 +65,9 @@ public:
 	/** Returns a copy of the m_MyBots field, in a thread-safe way. */
 	BotPtrs getMyBotsCopy(void) const;
 
+	/** Returns a copy of the m_AllBots field, in a thread-safe way. */
+	BotIDMap getAllBotsCopy(void) const;
+
 protected:
 	/** The parent App object. */
 	BotWarzApp & m_App;

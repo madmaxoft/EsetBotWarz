@@ -27,6 +27,7 @@ void Bot::updateFromJson(const Json::Value & a_Value)
 {
 	m_X = a_Value["x"].asDouble();
 	m_Y = a_Value["y"].asDouble();
+	m_Speed = a_Value["speed"].asDouble();
 	m_Angle = a_Value["angle"].asDouble();
 }
 

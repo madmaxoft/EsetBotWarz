@@ -5,8 +5,11 @@
 
 #include "Globals.h"
 #include "BotWarzApp.h"
+#include <fstream>
+#include <iostream>
 #include "Controller.h"
 #include "LuaController.h"
+#include "json/json.h"
 
 
 
@@ -29,6 +32,25 @@ int BotWarzApp::run(bool a_ShouldLogComm, bool a_ShouldShowComm, const AString &
 {
 	// Initialize the Lua controller:
 	m_Controller = createLuaController(*this, a_ControllerFileName, a_ShouldDebugZBS);
+	if (!m_Controller->isValid())
+	{
+		LOGERROR("Controller init failed, aborting.");
+		return 2;
+	}
+
+	// DEBUG: test the controller by processing a dummy game:
+	Json::Value gameData, updateData1, updateData2, finishData;
+	std::ifstream("gameData.json") >> gameData;
+	std::ifstream("updateData1.json") >> updateData1;
+	std::ifstream("updateData2.json") >> updateData2;
+	std::ifstream("finishData.json") >> finishData;
+	startGame(gameData["game"]);
+	updateBoard(updateData1["play"]);
+	updateBoard(updateData2["play"]);
+	finishGame(finishData["result"]);
+
+	LOGERROR("Temporary termination.");
+	return 1;
 
 	// Initialize the server communication interface:
 	if (!m_Comm.init(a_ShouldLogComm, a_ShouldShowComm))
@@ -98,6 +120,20 @@ void BotWarzApp::finishGame(const Json::Value & a_ResultData)
 	if (controller != nullptr)
 	{
 		controller->onGameFinished();
+	}
+}
+
+
+
+
+
+void BotWarzApp::botDied(const Bot & a_Bot)
+{
+	// Send the message to m_Controller, but take care of multithreading / reloading:
+	auto controller = m_Controller;
+	if (controller != nullptr)
+	{
+		controller->onBotDied(a_Bot);
 	}
 }
 

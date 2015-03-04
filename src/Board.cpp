@@ -31,7 +31,7 @@ void Board::initialize(const Json::Value & a_GameData)
 
 	// Read the speed list:
 	m_SpeedLevels.clear();
-	auto speedLevels = a_GameData["SpeedLevels"];
+	auto speedLevels = a_GameData["speedLevels"];
 	for (auto itr = speedLevels.begin(), end = speedLevels.end(); itr != end; ++itr)
 	{
 		auto & level = *itr;
@@ -39,6 +39,7 @@ void Board::initialize(const Json::Value & a_GameData)
 	}  // for itr - speedLevels[]
 
 	// Create the bots:
+	cCSLock Lock(m_CSBots);
 	m_MyBots.clear();
 	m_EnemyBots.clear();
 	auto & players = a_GameData["players"];
@@ -55,10 +56,11 @@ void Board::initialize(const Json::Value & a_GameData)
 		for (auto itrB = bots.begin(), endB = bots.end(); itrB != endB; ++itrB)
 		{
 			auto & bot = *itrB;
-			botArray.push_back(std::make_shared<Bot>(*this, bot["id"].asInt(), isEnemy, bot));
+			auto botItem = std::make_shared<Bot>(*this, bot["id"].asInt(), isEnemy, bot);
+			botArray.push_back(botItem);
+			m_AllBots[botItem->m_ID] = botItem;
 		}  // for itrB - bots[]
 	}  // for itrP - players[]
-	// TODO
 }
 
 
@@ -67,10 +69,56 @@ void Board::initialize(const Json::Value & a_GameData)
 
 void Board::updateFromJson(const Json::Value & a_GameData)
 {
-	// TODO
-
+	// Update the bot arrays
 	cCSLock Lock(m_CSBots);
-	// TODO: Update the bot arrays
+	std::vector<int> presentIDs;
+	for (int i = 0; i < 2; i++)
+	{
+		auto & bots = a_GameData["players"][i]["bots"];
+		for (auto itrB = bots.begin(), endB = bots.end(); itrB != endB; ++itrB)
+		{
+			auto & bot = *itrB;
+			int id = bot["id"].asInt();
+			presentIDs.push_back(id);
+			m_AllBots[id]->updateFromJson(bot);
+		}  // for itrB - bots[]
+	}  // for i - two players
+
+	// Remove bots that haven't been reported:
+	for (auto itr = m_AllBots.begin(), end = m_AllBots.end(); itr != end;)
+	{
+		if (std::find(presentIDs.begin(), presentIDs.end(), itr->first) == presentIDs.end())
+		{
+			m_App.botDied(*(itr->second));
+			itr = m_AllBots.erase(itr);
+		}
+		else
+		{
+			++itr;
+		}
+	}  // for itr - m_AllBots[]
+	for (auto itr = m_MyBots.begin(); itr != m_MyBots.end();)
+	{
+		if (std::find(presentIDs.begin(), presentIDs.end(), (*itr)->m_ID) == presentIDs.end())
+		{
+			itr = m_MyBots.erase(itr);
+		}
+		else
+		{
+			++itr;
+		}
+	}  // for itr - m_MyBots[]
+	for (auto itr = m_EnemyBots.begin(); itr != m_EnemyBots.end();)
+	{
+		if (std::find(presentIDs.begin(), presentIDs.end(), (*itr)->m_ID) == presentIDs.end())
+		{
+			itr = m_EnemyBots.erase(itr);
+		}
+		else
+		{
+			++itr;
+		}
+	}  // for itr - m_EnemyBots[]
 }
 
 
@@ -81,6 +129,16 @@ BotPtrs Board::getMyBotsCopy(void) const
 {
 	cCSLock Lock(m_CSBots);
 	return m_MyBots;
+}
+
+
+
+
+
+BotIDMap Board::getAllBotsCopy(void) const
+{
+	cCSLock Lock(m_CSBots);
+	return m_AllBots;
 }
 
 

@@ -53,6 +53,9 @@ public:
 	a_ResultData is the contents of the "result" tag of the server message. */
 	void finishGame(const Json::Value & a_ResultData);
 
+	/** Called by updateBoard when a bot death is detected. */
+	void botDied(const Bot & a_Bot);
+
 	const AString & getLoginToken(void) const { return m_LoginToken; }
 	const AString & getLoginNick(void) const { return m_LoginNick; }
 

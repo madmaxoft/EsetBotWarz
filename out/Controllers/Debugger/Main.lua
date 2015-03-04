@@ -7,9 +7,28 @@
 
 
 
+local function listBots(a_Game)
+	for k, bot in pairs(a_Game.allBots) do
+		print("  bot " .. k .. ":")
+		for k2, val in pairs(bot) do
+			print("    " .. k2 .. ": " .. tostring(val))
+		end
+	end
+end
+
+
+
+
+
 function onGameStarted(a_Game)
 	print("LUA: onGameStarted")
-	a_Game.botCommands[1] = {cmd = "accelerate"}
+	
+	-- Accellerate all my bots:
+	for idx, bot in pairs(a_Game.allBots) do
+		if not(bot.isEnemy) then
+			a_Game.botCommands[idx] = {cmd = "accelerate"}
+		end
+	end
 end
 
 
@@ -18,13 +37,13 @@ end
 
 function onGameUpdate(a_Game)
 	print("LUA: onGameUpdate")
-	print("a_Game = " .. tostring(a_Game))
-	print("a_Game.speedLevels = " .. tostring(a_Game.speedLevels))
-	print("a_Game.speedLevels[2] = " .. tostring(a_Game.speedLevels[2]))
-	print("a_Game.speedLevels[2].maxAngularSpeed = " .. tostring(a_Game.speedLevels[2].maxAngularSpeed))
+	-- listBots(a_Game)
 	
 	local cmd = {cmd = "turn", angle = a_Game.speedLevels[2].maxAngularSpeed}
-	a_Game.botCommands[1] = cmd
+	if not(a_Game.botCommands[1]) then
+		-- The previous command has been sent, send another one:
+		a_Game.botCommands[1] = cmd
+	end
 end
 
 
@@ -38,3 +57,13 @@ end
 
 
 
+
+function onBotDied(a_Game, a_BotID)
+	local friendliness
+	if (a_Game.allBots[a_BotID].isEnemy) then
+		friendliness = "(enemy)"
+	else
+		friendliness = "(my)"
+	end
+	print("LUA: onBotDied: bot #" .. a_BotID .. friendliness)
+end

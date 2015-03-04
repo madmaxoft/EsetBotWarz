@@ -29,7 +29,17 @@ public:
 		{
 			m_LuaState.execCode("require([[mobdebug]]).start()");
 		}
-		m_LuaState.loadFile(a_FileName);  // Ignore load errors, they get reported and the state can be used as a NOOP controller
+		m_IsValid = m_LuaState.loadFile(a_FileName);
+	}
+
+
+
+
+
+	/** Called upon startup to query whether the controller has initialized properly; the app will terminate if not. */
+	virtual bool isValid(void) const override
+	{
+		return m_IsValid;
 	}
 
 
@@ -62,6 +72,7 @@ public:
 		createSpeedLevelsTable();
 		createWorldTable();
 		createEmptySubTable("botCommands");
+		createAllBotTable();
 
 		m_LuaState.call("onGameStarted", &m_GameBoardTable);
 	}
@@ -87,11 +98,28 @@ public:
 	The board that has represented this game can be released after this call returns. */
 	virtual void onGameFinished(void) override
 	{
-		// TODO: Remove the board representation table
-
 		m_LuaState.call("onGameFinished", &m_GameBoardTable);
+		m_GameBoardTable.unRef();
 	}
 
+
+
+
+
+
+	virtual void onBotDied(const Bot & a_Bot) override
+	{
+		// Call the callback:
+		cCSLock Lock(m_CSLuaState);
+		m_LuaState.call("onBotDied", &m_GameBoardTable, a_Bot.m_ID);
+
+		// Remove the bot from the Lua tables:
+		lua_rawgeti(m_LuaState, LUA_REGISTRYINDEX, m_GameBoardTable);  // Stack: [GBT]
+		lua_getfield(m_LuaState, -1, "allBots");                       // Stack: [GBT] [allBots]
+		lua_pushnil(m_LuaState);                                       // Stack: [GBT] [allBots] [nil]
+		lua_rawseti(m_LuaState, -2, a_Bot.m_ID);                       // Stack: [GBT] [allBots]
+		lua_pop(m_LuaState, 2);
+	}
 
 
 
@@ -109,7 +137,7 @@ public:
 		{
 			return res;
 		}
-		m_LuaState.push(&m_GameBoardTable);
+		lua_rawgeti(m_LuaState, LUA_REGISTRYINDEX, m_GameBoardTable);
 
 		// Get the botCommands table:
 		lua_getfield(m_LuaState, -1, "botCommands");
@@ -157,6 +185,9 @@ protected:
 	/** The Lua engine used for the AI.
 	Protected against multithreaded access by m_CSLuaState. */
 	LuaState m_LuaState;
+
+	/** Set to true if the script file has loaded successfully. */
+	bool m_IsValid;
 
 	/** The reference to the game board table in the Lua state.
 	Only accessible when m_LuaState is valid (and m_CSLuaState held). */
@@ -230,6 +261,36 @@ protected:
 	{
 		lua_newtable(m_LuaState);                      // Stack: [GBT] [new table]
 		lua_setfield(m_LuaState, -2, a_SubTableName);  // Stack: [GBT]
+	}
+
+
+
+
+	/** Stores all the bots in an "allBots" table inside the GBT.
+	Assumes that the GBT is at the top of the Lua stack, and leaves it there. */
+	void createAllBotTable(void)
+	{
+		lua_newtable(m_LuaState);                    // Stack: [GBT] [allBots]
+		auto allBots = m_Board->getAllBotsCopy();
+		for (auto & bot: allBots)
+		{
+			auto & b = *(bot.second);
+			lua_newtable(m_LuaState);                  // Stack: [GBT] [allBots] [bot]
+			lua_pushnumber(m_LuaState, b.m_ID);        // Stack: [GBT] [allBots] [bot] [id]
+			lua_setfield(m_LuaState, -2, "id");        // Stack: [GBT] [allBots] [bot]
+			lua_pushnumber(m_LuaState, b.m_X);         // Stack: [GBT] [allBots] [bot] [x]
+			lua_setfield(m_LuaState, -2, "x");         // Stack: [GBT] [allBots] [bot]
+			lua_pushnumber(m_LuaState, b.m_Y);         // Stack: [GBT] [allBots] [bot] [y]
+			lua_setfield(m_LuaState, -2, "y");         // Stack: [GBT] [allBots] [bot]
+			lua_pushnumber(m_LuaState, b.m_Speed);     // Stack: [GBT] [allBots] [bot] [speed]
+			lua_setfield(m_LuaState, -2, "speed");     // Stack: [GBT] [allBots] [bot]
+			lua_pushnumber(m_LuaState, b.m_Angle);     // Stack: [GBT] [allBots] [bot] [angle]
+			lua_setfield(m_LuaState, -2, "angle");     // Stack: [GBT] [allBots] [bot]
+			lua_pushboolean(m_LuaState, b.m_IsEnemy);  // Stack: [GBT] [allBots] [bot] [isEnemy]
+			lua_setfield(m_LuaState, -2, "isEnemy");   // Stack: [GBT] [allBots] [bot]
+			lua_rawseti(m_LuaState, -2, b.m_ID);       // Stack: [GBT] [allBots]
+		}  // for bot - allBots[]
+		lua_setfield(m_LuaState, -2, "allBots");
 	}
 };
 

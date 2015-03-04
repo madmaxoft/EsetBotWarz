@@ -32,6 +32,7 @@ public:
 	bool m_IsEnemy;
 	double m_X;
 	double m_Y;
+	double m_Speed;
 	double m_Angle;
 
 
