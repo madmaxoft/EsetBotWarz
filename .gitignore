@@ -26,6 +26,7 @@
 *.exe
 *.out
 *.app
+out/
 
 # MSVC project files:
 *.vcxproj

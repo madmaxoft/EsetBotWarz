@@ -281,6 +281,17 @@ void inline LOGWARNING(const char * a_Format, ...)
 	va_end(argList);
 }
 
+void inline LOGINFO(const char * a_Format, ...) FORMATSTRING(1, 2);
+
+void inline LOGINFO(const char * a_Format, ...)
+{
+	va_list argList;
+	va_start(argList, a_Format);
+	vprintf(a_Format, argList);
+	putchar('\n');
+	va_end(argList);
+}
+
 void inline LOGD(const char * a_Format, ...) FORMATSTRING(1, 2);
 
 void inline LOGD(const char * a_Format, ...)
@@ -319,7 +330,7 @@ void inline LOG(const char * a_Format, ...)
 #define ASSERT assert
 
 // Pretty much the same as ASSERT() but stays in Release builds
-#define VERIFY(x) (!!(x) || (LOGERROR("Verification failed: %s, file %s, line %i", #x, __FILE__, __LINE__), PrintStackTrace(), exit(1), 0))
+#define VERIFY(x) (!!(x) || (LOGERROR("Verification failed: %s, file %s, line %i", #x, __FILE__, __LINE__), /* PrintStackTrace(), */ exit(1), 0))
 
 // Unified ptr types from before C++11. Also no silly undercores.
 #define SharedPtr std::shared_ptr

@@ -24,6 +24,15 @@ endif()
 
 project (EsetBotWarz)
 
+
+
+
+
+# Under Windows, we need Lua as DLL; on *nix we need it linked statically:
+if (WIN32)
+	add_definitions(-DLUA_BUILD_AS_DLL)
+endif()
+
 # Set options for JsonCPP, disable their tests:
 set(JSONCPP_WITH_TESTS               NO CACHE BOOL "Enable JsonCPP tests"      FORCE)
 set(JSONCPP_WITH_POST_BUILD_UNITTEST NO CACHE BOOL "Enable JsonCPP unit tests" FORCE)
@@ -49,6 +58,8 @@ include_directories(SYSTEM ${LIBEVENT_INCLUDE_DIRS})
 # Include all the libraries:
 add_subdirectory(lib/jsoncpp/)
 add_subdirectory(lib/libevent/)
+add_subdirectory(lib/lua/)
+add_subdirectory(lib/luaproxy/)
 add_subdirectory(lib/Network/)
 
 

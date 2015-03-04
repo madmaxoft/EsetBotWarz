@@ -11,6 +11,7 @@ SET (SRCS
 	Bot.cpp
 	BotWarzApp.cpp
 	Comm.cpp
+	LuaState.cpp
 	Globals.cpp
 	Main.cpp
 	sha1.cpp
@@ -18,9 +19,10 @@ SET (SRCS
 
 SET (HDRS
 	Board.h
-	Bot.cpp
+	Bot.h
 	BotWarzApp.h
 	Comm.h
+	LuaState.h
 	Globals.h
 	sha1.h
 )
@@ -67,5 +69,5 @@ endif ()
 if (WIN32)
 	target_link_libraries(${EXECUTABLE} ws2_32.lib Psapi.lib)
 endif()
-target_link_libraries(${EXECUTABLE} jsoncpp_lib_static Network event_core event_extra)
+target_link_libraries(${EXECUTABLE} lua jsoncpp_lib_static Network event_core event_extra)
 
