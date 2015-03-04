@@ -85,15 +85,6 @@ void LuaState::create(void)
 
 
 
-void LuaState::registerAPILibs(void)
-{
-	// TODO
-}
-
-
-
-
-
 void LuaState::close(void)
 {
 	if (m_LuaState == nullptr)
@@ -182,6 +173,17 @@ void LuaState::addPackagePath(const AString & a_PathVariable, const AString & a_
 	lua_setfield(m_LuaState, -2, a_PathVariable.c_str());                            // Stk: <package>
 	lua_pop(m_LuaState, 1);
 	lua_pop(m_LuaState, 1);                                                          // Stk: -
+}
+
+
+
+
+
+void LuaState::execCode(const char * a_LuaCode)
+{
+	ASSERT(isValid());
+
+	luaL_dostring(m_LuaState, a_LuaCode);
 }
 
 
@@ -392,6 +394,19 @@ void LuaState::push(int a_Value)
 	ASSERT(isValid());
 
 	lua_pushnumber(m_LuaState, a_Value);
+	m_NumCurrentFunctionArgs += 1;
+}
+
+
+
+
+
+void LuaState::push(Ref * a_Value)
+{
+	ASSERT(isValid());
+	ASSERT(a_Value->isValid());
+
+	lua_rawgeti(m_LuaState, LUA_REGISTRYINDEX, a_Value->operator int());
 	m_NumCurrentFunctionArgs += 1;
 }
 

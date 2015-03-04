@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "lib/Network/CriticalSection.h"
 #include "Bot.h"
 
 
@@ -28,17 +29,6 @@ namespace Json
 class Board
 {
 public:
-	Board(BotWarzApp & a_App);
-
-	/** (Re-)initializes the board from the game-start data.
-	a_GameData is the contents of the "game" tag of the server's message. */
-	void initialize(const Json::Value & a_GameData);
-
-	/** Updates the board contents based on the json received from the server.
-	a_Board is the contents of the "play" tag from the server's message. */
-	void updateFromJson(const Json::Value & a_Board);
-
-protected:
 	/** Defines a single level of speed that the bot can use. */
 	struct SpeedLevel
 	{
@@ -58,6 +48,24 @@ protected:
 	typedef std::vector<SpeedLevel> SpeedLevels;
 
 
+	Board(BotWarzApp & a_App);
+
+	/** (Re-)initializes the board from the game-start data.
+	a_GameData is the contents of the "game" tag of the server's message. */
+	void initialize(const Json::Value & a_GameData);
+
+	/** Updates the board contents based on the json received from the server.
+	a_Board is the contents of the "play" tag from the server's message. */
+	void updateFromJson(const Json::Value & a_Board);
+
+	const SpeedLevels & getSpeedLevels(void) const { return m_SpeedLevels; }
+	double getWorldWidth(void) const { return m_Width; }
+	double getWorldHeight(void) const { return m_Height; }
+
+	/** Returns a copy of the m_MyBots field, in a thread-safe way. */
+	BotPtrs getMyBotsCopy(void) const;
+
+protected:
 	/** The parent App object. */
 	BotWarzApp & m_App;
 
@@ -84,6 +92,9 @@ protected:
 
 	/** The nickname of the enemy. */
 	AString m_EnemyName;
+
+	/** The mutex protecting m_MyBots, m_EnemyBots and m_AllBots against multithreaded access. */
+	mutable cCriticalSection m_CSBots;
 };
 
 

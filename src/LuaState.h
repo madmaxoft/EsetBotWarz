@@ -50,6 +50,8 @@ public:
 		/** Creates a reference in the specified LuaState for object at the specified StackPos */
 		Ref(LuaState & a_LuaState, int a_StackPos);
 		
+		Ref(const Ref &) = delete;
+
 		~Ref();
 		
 		/** Creates a reference to Lua object at the specified stack pos, binds this object to it.
@@ -112,15 +114,12 @@ public:
 	/** Allows this object to be used in the same way as a lua_State *, for example in the LuaLib functions */
 	operator lua_State * (void) { return m_LuaState; }
 	
-	/** Creates the m_LuaState, if not closed already. This state will be automatically closed in the destructor.
-	The regular Lua libs are registered, but the MCS API is not registered (so that Lua can be used as
-	lite-config as well), use RegisterAPILibs() to do that. */
+	/** Creates the m_LuaState, if not created / attached already. This state will be automatically closed in the destructor.
+	The regular Lua libs are registered. */
 	void create(void);
 	
-	/** Registers all the API libraries that MCS provides into m_LuaState. */
-	void registerAPILibs(void);
-	
-	/** Closes the m_LuaState, if not closed already */
+	/** Closes the m_LuaState, if not closed already.
+	Doesn't close a state that has been attached. */
 	void close(void);
 	
 	/** Attaches the specified state. Operations will be carried out on this state, but it will not be closed in the destructor */
@@ -135,6 +134,9 @@ public:
 	/** Adds the specified path to package.<a_PathVariable> */
 	void addPackagePath(const AString & a_PathVariable, const AString & a_Path);
 	
+	/** Executes arbitrary Lua code within the current context of the state. */
+	void execCode(const char * a_LuaCode);
+
 	/** Loads the specified file
 	Returns false and logs a warning to the console if not successful (but the LuaState is kept open).
 	m_SubsystemName is displayed in the warning log message.
@@ -153,6 +155,7 @@ public:
 	void push(bool a_Value);
 	void push(double a_Value);
 	void push(int a_Value);
+	void push(Ref * a_Value);  // Cannot use Ref ptr, the compiler generates intermediate copies
 	
 	/** Retrieve value at a_StackPos, if it is a valid bool. If not, a_Value is unchanged */
 	void getStackValue(int a_StackPos, bool & a_Value);
@@ -283,8 +286,8 @@ protected:
 	template <typename T, typename... Args>
 	inline bool pushCallPop(T a_Param, Args &&... args)
 	{
-		Push(a_Param);
-		return PushCallPop(args...);
+		push(a_Param);
+		return pushCallPop(args...);
 	}
 
 	/** Variadic template terminator: If there's nothing more to push, but return values to collect, call the function and collect the returns. */

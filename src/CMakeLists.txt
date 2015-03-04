@@ -12,6 +12,7 @@ SET (SRCS
 	BotWarzApp.cpp
 	Comm.cpp
 	LuaState.cpp
+	LuaController.cpp
 	Globals.cpp
 	Main.cpp
 	sha1.cpp
@@ -22,7 +23,9 @@ SET (HDRS
 	Bot.h
 	BotWarzApp.h
 	Comm.h
+	Controller.h
 	LuaState.h
+	LuaController.h
 	Globals.h
 	sha1.h
 )
@@ -63,6 +66,39 @@ if (MSVC)
 		OBJECT_DEPENDS "$(IntDir)/$(TargetName.pch)"
 	)
 endif ()
+
+
+
+
+
+# Output the executable into the $/out folder, so that the executable can find it when debugging:
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/out)
+set(LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/out)
+SET_TARGET_PROPERTIES(${EXECUTABLE} PROPERTIES
+	ARCHIVE_OUTPUT_DIRECTORY_DEBUG          ${CMAKE_SOURCE_DIR}/out
+	ARCHIVE_OUTPUT_DIRECTORY_RELEASE        ${CMAKE_SOURCE_DIR}/out
+	ARCHIVE_OUTPUT_DIRECTORY_DEBUGPROFILE   ${CMAKE_SOURCE_DIR}/out
+	ARCHIVE_OUTPUT_DIRECTORY_RELEASEPROFILE ${CMAKE_SOURCE_DIR}/out
+	LIBRARY_OUTPUT_DIRECTORY_DEBUG          ${CMAKE_SOURCE_DIR}/out
+	LIBRARY_OUTPUT_DIRECTORY_RELEASE        ${CMAKE_SOURCE_DIR}/out
+	LIBRARY_OUTPUT_DIRECTORY_DEBUGPROFILE   ${CMAKE_SOURCE_DIR}/out
+	LIBRARY_OUTPUT_DIRECTORY_RELEASEPROFILE ${CMAKE_SOURCE_DIR}/out
+	RUNTIME_OUTPUT_DIRECTORY_DEBUG          ${CMAKE_SOURCE_DIR}/out
+	RUNTIME_OUTPUT_DIRECTORY_RELEASE        ${CMAKE_SOURCE_DIR}/out
+	RUNTIME_OUTPUT_DIRECTORY_DEBUGPROFILE   ${CMAKE_SOURCE_DIR}/out
+	RUNTIME_OUTPUT_DIRECTORY_RELEASEPROFILE ${CMAKE_SOURCE_DIR}/out
+)
+
+
+# Make the debug executable have a "_debug" suffix
+SET_TARGET_PROPERTIES(${EXECUTABLE} PROPERTIES DEBUG_POSTFIX "_debug")
+
+# Make the profiled executables have a "_profile" postfix
+SET_TARGET_PROPERTIES(${EXECUTABLE} PROPERTIES DEBUGPROFILE_POSTFIX "_debug_profile")
+SET_TARGET_PROPERTIES(${EXECUTABLE} PROPERTIES RELEASEPROFILE_POSTFIX "_profile")
+
+
+
 
 
 # Link the required libraries:

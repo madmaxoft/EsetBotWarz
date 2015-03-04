@@ -437,7 +437,7 @@ void Comm::processResult(const Json::Value & a_Response)
 {
 	if (m_Status != csGame)
 	{
-		LOGERROR("%s: Received a \"play\" response while not in a game (status %d). Aborting.",
+		LOGERROR("%s: Received a \"result\" response while not in a game (status %d). Aborting.",
 			__FUNCTION__, m_Status
 		);
 		abortConnection();
@@ -445,6 +445,7 @@ void Comm::processResult(const Json::Value & a_Response)
 	}
 	
 	LOG("Game finished. Winner: %s", a_Response["result"]["winner"]["nickname"].asCString());
+	m_App.finishGame(a_Response["result"]);
 	m_Status = csIdle;
 }
 

@@ -2,6 +2,7 @@
 #include "Globals.h"  // NOTE: MSVC stupidness requires this to be the same across all modules
 
 #include <fstream>
+#include <iostream>
 #include "lib/Network/NetworkSingleton.h"
 #include "BotWarzApp.h"
 
@@ -16,7 +17,10 @@ int run(int argc, char ** argv)
 	// Process the command line:
 	bool shouldLogComm = false;
 	bool shouldShowComm = false;
-	for (int i = 0; i < argc; i++)
+	bool shouldDebugZBS = false;
+	bool shouldPauseOnExit = false;
+	AString controllerFileName = "Controller.lua";
+	for (int i = 1; i < argc; i++)
 	{
 		AString Arg(argv[i]);
 		if (NoCaseCompare(Arg, "/logcomm") == 0)
@@ -27,9 +31,21 @@ int run(int argc, char ** argv)
 		{
 			shouldShowComm = true;
 		}
-		else if (NoCaseCompare(Arg, "nooutbuf") == 0)
+		else if (NoCaseCompare(Arg, "/zbsdebug") == 0)
+		{
+			shouldDebugZBS = true;
+		}
+		else if (NoCaseCompare(Arg, "/pauseonexit") == 0)
+		{
+			shouldPauseOnExit = true;
+		}
+		else if (NoCaseCompare(Arg, "/nooutbuf") == 0)
 		{
 			setvbuf(stdout, nullptr, _IONBF, 0);
+		}
+		else
+		{
+			controllerFileName = Arg;
 		}
 	}  // for i - argv[]
 
@@ -54,7 +70,15 @@ int run(int argc, char ** argv)
 
 	// Run the app:
 	BotWarzApp app(loginToken, loginNick);
-	return app.run(shouldLogComm, shouldShowComm);
+	int res = app.run(shouldLogComm, shouldShowComm, controllerFileName, shouldDebugZBS);
+
+	if (shouldPauseOnExit)
+	{
+		LOG("Press Enter to terminate");
+		AString line;
+		std::getline(std::cin, line);
+	}
+	return res;
 }
 
 

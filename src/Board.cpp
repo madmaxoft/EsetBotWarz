@@ -68,6 +68,19 @@ void Board::initialize(const Json::Value & a_GameData)
 void Board::updateFromJson(const Json::Value & a_GameData)
 {
 	// TODO
+
+	cCSLock Lock(m_CSBots);
+	// TODO: Update the bot arrays
+}
+
+
+
+
+
+BotPtrs Board::getMyBotsCopy(void) const
+{
+	cCSLock Lock(m_CSBots);
+	return m_MyBots;
 }
 
 

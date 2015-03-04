@@ -5,6 +5,8 @@
 
 #include "Globals.h"
 #include "BotWarzApp.h"
+#include "Controller.h"
+#include "LuaController.h"
 
 
 
@@ -23,8 +25,11 @@ BotWarzApp::BotWarzApp(const AString a_LoginToken, const AString & a_LoginNick):
 
 
 
-int BotWarzApp::run(bool a_ShouldLogComm, bool a_ShouldShowComm)
+int BotWarzApp::run(bool a_ShouldLogComm, bool a_ShouldShowComm, const AString & a_ControllerFileName, bool a_ShouldDebugZBS)
 {
+	// Initialize the Lua controller:
+	m_Controller = createLuaController(*this, a_ControllerFileName, a_ShouldDebugZBS);
+
 	// Initialize the server communication interface:
 	if (!m_Comm.init(a_ShouldLogComm, a_ShouldShowComm))
 	{
@@ -57,6 +62,13 @@ void BotWarzApp::terminate(void)
 void BotWarzApp::startGame(const Json::Value & a_GameData)
 {
 	m_Board.initialize(a_GameData);
+
+	// Send the message to m_Controller, but take care of multithreading / reloading:
+	auto controller = m_Controller;
+	if (controller != nullptr)
+	{
+		controller->onGameStarted(m_Board);
+	}
 }
 
 
@@ -66,6 +78,27 @@ void BotWarzApp::startGame(const Json::Value & a_GameData)
 void BotWarzApp::updateBoard(const Json::Value & a_GameData)
 {
 	m_Board.updateFromJson(a_GameData);
+
+	// Send the message to m_Controller, but take care of multithreading / reloading:
+	auto controller = m_Controller;
+	if (controller != nullptr)
+	{
+		controller->onGameUpdate();
+	}
+}
+
+
+
+
+
+void BotWarzApp::finishGame(const Json::Value & a_ResultData)
+{
+	// Send the message to m_Controller, but take care of multithreading / reloading:
+	auto controller = m_Controller;
+	if (controller != nullptr)
+	{
+		controller->onGameFinished();
+	}
 }
 
 
