@@ -59,7 +59,9 @@ include_directories(SYSTEM ${LIBEVENT_INCLUDE_DIRS})
 add_subdirectory(lib/jsoncpp/)
 add_subdirectory(lib/libevent/)
 add_subdirectory(lib/lua/)
-add_subdirectory(lib/luaproxy/)
+if (WIN32)
+	add_subdirectory(lib/luaproxy/)
+endif()
 add_subdirectory(lib/Network/)
 
 

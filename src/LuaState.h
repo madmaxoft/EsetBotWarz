@@ -292,7 +292,7 @@ protected:
 	bool pushCallPop(LuaState::Ret, Args &&... args)
 	{
 		// Calculate the number of return values (number of args left):
-		int numReturns = sizeof...(args...);
+		int numReturns = sizeof...(args);
 
 		// Call the function:
 		if (!callFunction(numReturns))

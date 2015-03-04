@@ -500,7 +500,7 @@ bool LuaState::checkParamTable(int a_StartParam, int a_EndParam)
 		VERIFY(lua_getstack(m_LuaState, 0,   &entry));
 		VERIFY(lua_getinfo (m_LuaState, "n", &entry));
 		LOG("Error in function '%s': expected a table as parameter #%d, got %s",
-			(entry.name != nullptr) ? entry.name : "?", i, getTypeText(i)
+			(entry.name != nullptr) ? entry.name : "?", i, getTypeText(i).c_str()
 		);
 		return false;
 	}  // for i - Param
@@ -533,7 +533,7 @@ bool LuaState::checkParamNumber(int a_StartParam, int a_EndParam)
 		VERIFY(lua_getstack(m_LuaState, 0,   &entry));
 		VERIFY(lua_getinfo (m_LuaState, "n", &entry));
 		LOG("Error in function '%s': expected a number as parameter #%d, got %s",
-			(entry.name != nullptr) ? entry.name : "?", i, getTypeText(i)
+			(entry.name != nullptr) ? entry.name : "?", i, getTypeText(i).c_str()
 		);
 		return false;
 	}  // for i - Param
@@ -566,7 +566,7 @@ bool LuaState::checkParamString(int a_StartParam, int a_EndParam)
 		VERIFY(lua_getstack(m_LuaState, 0,   &entry));
 		VERIFY(lua_getinfo (m_LuaState, "n", &entry));
 		LOG("Error in function '%s': expected a string as parameter #%d, got %s",
-			(entry.name != nullptr) ? entry.name : "?", i, getTypeText(i)
+			(entry.name != nullptr) ? entry.name : "?", i, getTypeText(i).c_str()
 		);
 		return false;
 	}  // for i - Param
@@ -599,7 +599,7 @@ bool LuaState::checkParamFunction(int a_StartParam, int a_EndParam)
 		VERIFY(lua_getstack(m_LuaState, 0,   &entry));
 		VERIFY(lua_getinfo (m_LuaState, "n", &entry));
 		LOG("Error in function '%s': expected a function as parameter #%d, got %s",
-			(entry.name != nullptr) ? entry.name : "?", i, getTypeText(i)
+			(entry.name != nullptr) ? entry.name : "?", i, getTypeText(i).c_str()
 		);
 		return false;
 	}  // for i - Param
@@ -632,7 +632,7 @@ bool LuaState::checkParamFunctionOrNil(int a_StartParam, int a_EndParam)
 		VERIFY(lua_getstack(m_LuaState, 0,   &entry));
 		VERIFY(lua_getinfo (m_LuaState, "n", &entry));
 		LOG("Error in function '%s': expected a function or nil as parameter #%d, got %s",
-			(entry.name != nullptr) ? entry.name : "?", i, getTypeText(i)
+			(entry.name != nullptr) ? entry.name : "?", i, getTypeText(i).c_str()
 		);
 		return false;
 	}  // for i - Param
@@ -656,7 +656,7 @@ bool LuaState::checkParamEnd(int a_Param)
 	VERIFY(lua_getstack(m_LuaState, 0,   &entry));
 	VERIFY(lua_getinfo (m_LuaState, "n", &entry));
 	LOG("Error in function '%s': expected no more parameters at #%d, got %s",
-		(entry.name != nullptr) ? entry.name : "?", a_Param, getTypeText(a_Param)
+		(entry.name != nullptr) ? entry.name : "?", a_Param, getTypeText(a_Param).c_str()
 	);
 	return false;
 }
