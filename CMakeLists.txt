@@ -33,6 +33,15 @@ if (WIN32)
 	add_definitions(-DLUA_BUILD_AS_DLL)
 endif()
 
+# Set the dynamic loader library to use in *nix:
+if (UNIX)
+	if(${CMAKE_SYSTEM_NAME} STREQUAL "FreeBSD")
+		set(DYNAMIC_LOADER ltdl)
+	else()
+		set(DYNAMIC_LOADER dl)
+	endif()
+endif()
+
 # Set options for JsonCPP, disable their tests:
 set(JSONCPP_WITH_TESTS               NO CACHE BOOL "Enable JsonCPP tests"      FORCE)
 set(JSONCPP_WITH_POST_BUILD_UNITTEST NO CACHE BOOL "Enable JsonCPP unit tests" FORCE)
