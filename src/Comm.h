@@ -12,6 +12,7 @@
 #include <thread>
 #include "lib/Network/Network.h"
 #include "lib/Network/Event.h"
+#include "lib/Network/CriticalSection.h"
 
 
 
@@ -48,6 +49,11 @@ public:
 	/** Sends the json data to the server, logging it to file if requested. */
 	void send(const Json::Value & a_Data);
 
+	/** Outputs the message to the commlog, if logging is enabled.
+	Prefixes each message with a timestamp since the logfile creation.
+	A newline is not included in the output message, caller needs to provide one. */
+	void commLog(const AString & a_Msg);
+
 protected:
 	friend class Callbacks;
 
@@ -72,8 +78,15 @@ protected:
 	/** If true, all the communication with the server is logged into m_CommLogFile. */
 	bool m_ShouldLogComm;
 
-	/** File into which all the communication is logged, if m_ShouldLogComm is true. */
+	/** File into which all the communication is logged, if m_ShouldLogComm is true.
+	Protected against multithreaded writes by m_CSCommLog. */
 	FILE * m_CommLogFile;
+
+	/** Mutex protecting m_CommLogFile against multithreaded writes. */
+	cCriticalSection m_CSCommLog;
+
+	/** The timestamp of the commlogfile creation. Used to output relative time offsets in the commlog file */
+	std::chrono::high_resolution_clock::time_point m_CommLogBeginTime;
 
 	/** The TCP link to the server. */
 	cTCPLinkPtr m_Link;
@@ -93,8 +106,14 @@ protected:
 	/** Event that is set when a game is started. */
 	cEvent m_evtGameStart;
 
-	/** Event that is set on each game update received. */
-	cEvent m_evtGameUpdate;
+	/** Event that is set when a  game update is received that has the matching lastCmdId with our last sent cmdId. */
+	cEvent m_evtCommandIdMatch;
+
+	/** The last cmdId sent to the server. */
+	volatile int m_LastSentCmdId;
+
+	/** The last cmdId received from the server. */
+	volatile int m_LastReceivedCmdId;
 
 	/** The thread that queries the controller for new commands and sends them to the server, timed apart. */
 	std::thread m_CommandSenderThread;

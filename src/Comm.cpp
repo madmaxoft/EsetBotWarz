@@ -80,6 +80,8 @@ Comm::Comm(BotWarzApp & a_App):
 	m_CommLogFile(nullptr),
 	m_Status(csConnecting),
 	m_ShouldTerminate(false),
+	m_LastSentCmdId(1),
+	m_LastReceivedCmdId(1),
 	m_CommandSenderThread(&Comm::commandSenderThread, this)
 {
 }
@@ -126,7 +128,7 @@ void Comm::stop(void)
 	// Wake up the update sender thread and wait for it to terminate:
 	m_ShouldTerminate = true;
 	m_evtGameStart.Set();
-	m_evtGameUpdate.Set();
+	m_evtCommandIdMatch.Set();
 	m_CommandSenderThread.join();
 }
 
@@ -137,17 +139,7 @@ void Comm::stop(void)
 void Comm::send(const AString & a_Data)
 {
 	// Log to file, if requested:
-	if (m_ShouldLogComm)
-	{
-		fprintf(m_CommLogFile, "OUT: %s", a_Data.c_str());
-		fflush(m_CommLogFile);
-	}
-
-	// Show on stdout, if requested:
-	if (m_ShouldShowComm)
-	{
-		printf("OUT: %s", a_Data.c_str());
-	}
+	commLog(Printf("OUT: %s", a_Data.c_str()));
 
 	m_Link->Send(a_Data);
 }
@@ -162,6 +154,28 @@ void Comm::send(const Json::Value & a_Data)
 	wr.settings_["indentation"] = "";
 	wr.settings_["commentStyle"] = "None";
 	send(Json::writeString(wr, a_Data) + "\n");
+}
+
+
+
+
+
+void Comm::commLog(const AString & a_Msg)
+{
+	// Show on stdout, if requested:
+	double timeOffset = static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - m_CommLogBeginTime).count()) / 1000;
+	if (m_ShouldShowComm)
+	{
+		printf("%9.3f %s", timeOffset, a_Msg.c_str());
+	}
+
+	// Output to file, if requested:
+	cCSLock Lock(m_CSCommLog);
+	if (m_ShouldLogComm)
+	{
+		fprintf(m_CommLogFile, "%9.3f %s", timeOffset, a_Msg.c_str());
+		fflush(m_CommLogFile);
+	}
 }
 
 
@@ -200,6 +214,7 @@ void Comm::openCommLogFile(void)
 		m_CommLogFile = fopen(FileName.c_str(), "w");
 	#endif
 	m_ShouldLogComm = (m_CommLogFile != nullptr);
+	m_CommLogBeginTime = std::chrono::high_resolution_clock::now();
 }
 
 
@@ -207,26 +222,8 @@ void Comm::openCommLogFile(void)
 
 void Comm::onIncomingData(const AString & a_Data)
 {
-	// Log to file, if requested:
-	if (m_ShouldLogComm)
-	{
-		fprintf(m_CommLogFile, "IN:  %s", a_Data.c_str());
-		if (!a_Data.empty() && (a_Data.back() != '\n'))
-		{
-			fprintf(m_CommLogFile, "\n");
-		}
-		fflush(m_CommLogFile);
-	}
-
-	// Show on stdout, if requested:
-	if (m_ShouldShowComm)
-	{
-		printf("IN:  %s", a_Data.c_str());
-		if (!a_Data.empty() && (a_Data.back() != '\n'))
-		{
-			printf("\n");
-		}
-	}
+	// Log to file / screen, if requested:
+	commLog(Printf("IN:  %s\n", a_Data.c_str()));
 
 	// Process the data, linewise:
 	auto queuedEnd = m_QueuedData.size();
@@ -436,7 +433,14 @@ void Comm::processPlay(const Json::Value & a_Response)
 	}
 
 	m_App.updateBoard(a_Response["play"]);
-	m_evtGameUpdate.Set();
+
+	// If the received lastCmdId starts matching our cmdId, wake up the command sender:
+	auto prevLastReceivedCmdId = m_LastReceivedCmdId;
+	m_LastReceivedCmdId = a_Response["play"]["lastCmdId"].asInt();
+	if ((m_LastReceivedCmdId == m_LastSentCmdId) && (m_LastReceivedCmdId != prevLastReceivedCmdId))
+	{
+		m_evtCommandIdMatch.Set();
+	}
 }
 
 
@@ -503,9 +507,11 @@ void Comm::commandSenderThread(void)
 			// Send the commands:
 			sendCommands();
 
-			// Wait for the game update:
-			m_evtGameUpdate.Wait();
-			std::this_thread::sleep_for(std::chrono::milliseconds(210));  // A bit more time to keep it safe
+			// Wait for the game update with the matching command ID:
+			m_evtCommandIdMatch.Wait();
+
+			// The command ID has just matched, wait for 200 msec before sending new commands:
+			std::this_thread::sleep_for(std::chrono::milliseconds(200));
 		}  // while (csGame)
 	}  // while (!m_ShouldTerminate)
 }
@@ -517,15 +523,9 @@ void Comm::commandSenderThread(void)
 
 void Comm::sendCommands(void)
 {
-	static int counter = 1;
 	Json::Value cmds;
-	cmds["cmdId"] = counter++;
+	cmds["cmdId"] = ++m_LastSentCmdId;
 	cmds["bots"] = m_App.getBotCommands();
-	if (cmds["bots"].empty())
-	{
-		LOGD("No commands to send, skipping this round.");
-		return;
-	}
 	send(cmds);
 }
 
