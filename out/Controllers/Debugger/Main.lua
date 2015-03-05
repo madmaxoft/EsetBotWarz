@@ -67,3 +67,15 @@ function onBotDied(a_Game, a_BotID)
 	end
 	print("LUA: onBotDied: bot #" .. a_BotID .. friendliness)
 end
+
+
+
+
+
+function onCommandsSent(a_Game)
+	print("LUA: The commands have been sent")
+end
+
+
+
+

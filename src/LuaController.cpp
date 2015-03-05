@@ -183,6 +183,9 @@ public:
 		}  // for bot - myBots[]
 		lua_pop(m_LuaState, 2);
 
+		// Let the Lua script know that we've sent the commands:
+		m_LuaState.call("onCommandsSent", &m_GameBoardTable);
+
 		return res;
 	}
 
