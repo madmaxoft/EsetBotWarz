@@ -34,8 +34,9 @@ public:
 	If a_ShouldShowComm is true, all the communication with the server is output to stdout.
 	a_ControllerFileName is the name of the Lua file to use for the controller.
 	If a_ShouldDebugZBS is true, a ZBS debugger code is prepended to the Lua controller script, enabling debugging in ZeroBrane Studio.
+	If a_NumGamesToPlay is positive, the app will exit after playing that many games; no limit if the number is negative.
 	Returns the value that the process should return to the OS upon its exit. */
-	int run(bool a_ShouldLogComm, bool a_ShouldShowComm, const AString & a_ControllerFileName, bool a_ShouldDebugZBS);
+	int run(bool a_ShouldLogComm, bool a_ShouldShowComm, const AString & a_ControllerFileName, bool a_ShouldDebugZBS, int a_NumGamesToPlay);
 
 	/** Notifies the app that it should terminate.
 	Wakes up the main thread to do the actual termination. */
@@ -83,6 +84,8 @@ protected:
 	/** The nick to be used for login. */
 	AString m_LoginNick;
 
+	/** The number of games to play. If positive, each game decrements this on finish, when it reaches zero, the app will terminate. */
+	int m_NumGamesToPlay;
 };
 
 

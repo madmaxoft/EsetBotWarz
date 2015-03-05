@@ -38,7 +38,7 @@ local function MakeEsetBotWarzInterpreter(a_InterpreterPostfix, a_ExePostfix)
 			end
 
 			-- Add a "nooutbuf" cmdline param to the server, causing it to call setvbuf to disable output buffering:
-			local Cmd = ExeName:GetFullPath() .. " " .. wfilename:GetFullPath() .. " /nooutbuf /pauseonexit"
+			local Cmd = ExeName:GetFullPath() .. " " .. wfilename:GetFullPath() .. " /nooutbuf /pauseonexit /singlegame /logcomm"
 			if (withdebug) then
 				Cmd = Cmd .. " /zbsdebug"
 			end

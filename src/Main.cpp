@@ -19,6 +19,7 @@ int run(int argc, char ** argv)
 	bool shouldShowComm = false;
 	bool shouldDebugZBS = false;
 	bool shouldPauseOnExit = false;
+	int numGamesToPlay = -1;  // no limit
 	AString controllerFileName;
 	for (int i = 1; i < argc; i++)
 	{
@@ -38,6 +39,10 @@ int run(int argc, char ** argv)
 		else if (NoCaseCompare(Arg, "/pauseonexit") == 0)
 		{
 			shouldPauseOnExit = true;
+		}
+		else if (NoCaseCompare(Arg, "/singlegame") == 0)
+		{
+			numGamesToPlay = 1;
 		}
 		else if (NoCaseCompare(Arg, "/nooutbuf") == 0)
 		{
@@ -75,7 +80,7 @@ int run(int argc, char ** argv)
 
 	// Run the app:
 	BotWarzApp app(loginToken, loginNick);
-	int res = app.run(shouldLogComm, shouldShowComm, controllerFileName, shouldDebugZBS);
+	int res = app.run(shouldLogComm, shouldShowComm, controllerFileName, shouldDebugZBS, numGamesToPlay);
 
 	if (shouldPauseOnExit)
 	{

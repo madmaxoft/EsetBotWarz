@@ -19,7 +19,8 @@ BotWarzApp::BotWarzApp(const AString a_LoginToken, const AString & a_LoginNick):
 	m_Board(*this),
 	m_Comm(*this),
 	m_LoginToken(a_LoginToken),
-	m_LoginNick(a_LoginNick)
+	m_LoginNick(a_LoginNick),
+	m_NumGamesToPlay(-1)
 {
 	LOG("Login nick: %s", a_LoginNick.c_str());
 }
@@ -28,8 +29,10 @@ BotWarzApp::BotWarzApp(const AString a_LoginToken, const AString & a_LoginNick):
 
 
 
-int BotWarzApp::run(bool a_ShouldLogComm, bool a_ShouldShowComm, const AString & a_ControllerFileName, bool a_ShouldDebugZBS)
+int BotWarzApp::run(bool a_ShouldLogComm, bool a_ShouldShowComm, const AString & a_ControllerFileName, bool a_ShouldDebugZBS, int a_NumGamesToPlay)
 {
+	m_NumGamesToPlay = a_NumGamesToPlay;
+
 	// Initialize the Lua controller:
 	m_Controller = createLuaController(*this, a_ControllerFileName, a_ShouldDebugZBS);
 	if (!m_Controller->isValid())
@@ -37,23 +40,6 @@ int BotWarzApp::run(bool a_ShouldLogComm, bool a_ShouldShowComm, const AString &
 		LOGERROR("Controller init failed, aborting.");
 		return 2;
 	}
-
-	/*
-	// DEBUG: test the controller by processing a dummy game:
-	Json::Value gameData, updateData1, updateData2, finishData;
-	std::ifstream("gameData.json") >> gameData;
-	std::ifstream("updateData1.json") >> updateData1;
-	std::ifstream("updateData2.json") >> updateData2;
-	std::ifstream("finishData.json") >> finishData;
-	startGame(gameData["game"]);
-	updateBoard(updateData1["play"]);
-	updateBoard(updateData2["play"]);
-	finishGame(finishData["result"]);
-
-	LOGERROR("Temporary termination.");
-	m_Comm.stop();
-	return 1;
-	*/
 
 	// Initialize the server communication interface:
 	if (!m_Comm.init(a_ShouldLogComm, a_ShouldShowComm))
@@ -123,6 +109,16 @@ void BotWarzApp::finishGame(const Json::Value & a_ResultData)
 	if (controller != nullptr)
 	{
 		controller->onGameFinished();
+	}
+
+	// Check whether the number of games is limited:
+	if (m_NumGamesToPlay > 0)
+	{
+		m_NumGamesToPlay -= 1;
+		if (m_NumGamesToPlay == 0)
+		{
+			terminate();
+		}
 	}
 }
 

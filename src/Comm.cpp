@@ -125,6 +125,14 @@ bool Comm::init(bool a_ShouldLogComm, bool a_ShouldShowComm)
 
 void Comm::stop(void)
 {
+	// Close the connection to the server:
+	auto Link = m_Link;
+	if (Link != nullptr)
+	{
+		Link->Close();
+		m_Link.reset();
+	}
+
 	// Wake up the update sender thread and wait for it to terminate:
 	m_ShouldTerminate = true;
 	m_evtGameStart.Set();
