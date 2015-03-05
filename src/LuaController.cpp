@@ -85,7 +85,26 @@ public:
 	/** Called when a game update has been received. */
 	virtual void onGameUpdate(void) override
 	{
-		// TODO: Update the board representation table
+		// Update the bots in the board representation table:
+		cCSLock Lock(m_CSLuaState);
+		lua_rawgeti(m_LuaState, LUA_REGISTRYINDEX, m_GameBoardTable);  // Stack: [GBT]
+		lua_getfield(m_LuaState, -1, "allBots");                       // Stack: [GBT] [allBots]
+		auto bots = m_Board->getAllBotsCopy();
+		for (auto & bot: bots)
+		{
+			auto & b = *(bot.second);
+			lua_rawgeti(m_LuaState, -1, b.m_ID);    // Stack: [GBT] [allBots] [bot]
+			lua_pushnumber(m_LuaState, b.m_X);      // Stack: [GBT] [allBots] [bot] [x]
+			lua_setfield(m_LuaState, -2, "x");      // Stack: [GBT] [allBots] [bot]
+			lua_pushnumber(m_LuaState, b.m_Y);      // Stack: [GBT] [allBots] [bot] [y]
+			lua_setfield(m_LuaState, -2, "y");      // Stack: [GBT] [allBots] [bot]
+			lua_pushnumber(m_LuaState, b.m_Angle);  // Stack: [GBT] [allBots] [bot] [angle]
+			lua_setfield(m_LuaState, -2, "angle");  // Stack: [GBT] [allBots] [bot]
+			lua_pushnumber(m_LuaState, b.m_Speed);  // Stack: [GBT] [allBots] [bot] [speed]
+			lua_setfield(m_LuaState, -2, "speed");  // Stack: [GBT] [allBots] [bot]
+			lua_pop(m_LuaState, 1);                 // Stack: [GBT] [allBots]
+		}  // for bot - bots[]
+		lua_pop(m_LuaState, 2);
 
 		m_LuaState.call("onGameUpdate", &m_GameBoardTable);
 	}
@@ -99,6 +118,7 @@ public:
 	The board that has represented this game can be released after this call returns. */
 	virtual void onGameFinished(void) override
 	{
+		cCSLock Lock(m_CSLuaState);
 		m_LuaState.call("onGameFinished", &m_GameBoardTable);
 		m_GameBoardTable.unRef();
 	}
@@ -167,7 +187,7 @@ public:
 			int toPop = 2;
 			if (cmd == "steer")
 			{
-				AString angle;
+				lua_Number angle;
 				lua_getfield(m_LuaState, -2, "angle");  // Stack: [GBT] [botCommands] [bot] [.cmd] [.angle]
 				m_LuaState.getStackValue(-1, angle);
 				val["angle"] = angle;

@@ -39,10 +39,15 @@ function onGameUpdate(a_Game)
 	print("LUA: onGameUpdate")
 	-- listBots(a_Game)
 	
+	-- Keep turning each bot:
 	local cmd = {cmd = "steer", angle = a_Game.speedLevels[2].maxAngularSpeed}
-	if not(a_Game.botCommands[1]) then
-		-- The previous command has been sent, send another one:
-		a_Game.botCommands[1] = cmd
+	for idx, bot in pairs(a_Game.allBots) do
+		if not(bot.isEnemy) then
+			if not(a_Game.botCommands[bot.id]) then
+				-- The previous command has been sent, send another one:
+				a_Game.botCommands[bot.id] = cmd
+			end
+		end
 	end
 end
 
