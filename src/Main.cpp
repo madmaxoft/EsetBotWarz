@@ -19,7 +19,7 @@ int run(int argc, char ** argv)
 	bool shouldShowComm = false;
 	bool shouldDebugZBS = false;
 	bool shouldPauseOnExit = false;
-	AString controllerFileName = "Controller.lua";
+	AString controllerFileName;
 	for (int i = 1; i < argc; i++)
 	{
 		AString Arg(argv[i]);
@@ -48,6 +48,11 @@ int run(int argc, char ** argv)
 			controllerFileName = Arg;
 		}
 	}  // for i - argv[]
+	if (controllerFileName.empty())
+	{
+		LOGERROR("You have not specified the controller file name. Run this program with the lua file name parameter to execute the file as the AI controller.");
+		return 2;
+	}
 
 	// Read the login information from a file:
 	AString loginToken;
