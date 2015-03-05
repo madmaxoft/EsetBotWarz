@@ -9,6 +9,13 @@
 #include "Controller.h"
 #include "LuaState.h"
 #include "Board.h"
+#include "BotWarzApp.h"
+
+
+
+
+
+static const char LUA_GLOBAL_LUACONTROLLER_FIELD_NAME[] = "__EsetBotWarz_luaController";
 
 
 
@@ -74,6 +81,7 @@ public:
 		createWorldTable();
 		createEmptySubTable("botCommands");
 		createAllBotTable();
+		createAPIFunctions();
 
 		m_LuaState.call("onGameStarted", &m_GameBoardTable);
 	}
@@ -336,6 +344,45 @@ protected:
 		LOGERROR("%s", panicString.c_str());
 		L.logStackTrace();
 		return 1;
+	}
+
+
+
+
+
+	/** Binding for the Comm::commLog() function */
+	static int commLog(lua_State * a_LuaState)
+	{
+		// Get the luaController instance from the state:
+		lua_getfield(a_LuaState, LUA_GLOBALSINDEX, LUA_GLOBAL_LUACONTROLLER_FIELD_NAME);
+		if (!lua_islightuserdata(a_LuaState, -1))
+		{
+			LOGWARNING("Cannot find my instance in the Lua state");
+			return 0;
+		}
+		LuaController * luaController = reinterpret_cast<LuaController *>(lua_touserdata(a_LuaState, -1));
+		lua_pop(a_LuaState, 1);
+
+		LuaState L(a_LuaState);
+		AString msg;
+		L.getStackValue(1, msg);
+		luaController->m_App.commLog(msg + "\n");
+		return 0;
+	}
+
+
+
+
+
+	void createAPIFunctions(void)
+	{
+		// Push the luaController instance into the state:
+		lua_pushlightuserdata(m_LuaState, this);
+		lua_setfield(m_LuaState, LUA_GLOBALSINDEX, LUA_GLOBAL_LUACONTROLLER_FIELD_NAME);
+
+		// Push the API functions:
+		lua_pushcfunction(m_LuaState, &commLog);
+		lua_setfield(m_LuaState, LUA_GLOBALSINDEX, "commLog");
 	}
 };
 

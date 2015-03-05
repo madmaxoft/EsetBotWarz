@@ -56,6 +56,9 @@ public:
 	/** Called by updateBoard when a bot death is detected. */
 	void botDied(const Bot & a_Bot);
 
+	/** Outputs a message to the commlog / screen, if requested. Relayed to m_Comm. */
+	void commLog(const AString & a_Msg);
+
 	const AString & getLoginToken(void) const { return m_LoginToken; }
 	const AString & getLoginNick(void) const { return m_LoginNick; }
 

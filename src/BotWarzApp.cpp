@@ -144,6 +144,15 @@ void BotWarzApp::botDied(const Bot & a_Bot)
 
 
 
+void BotWarzApp::commLog(const AString & a_Msg)
+{
+	m_Comm.commLog(a_Msg);
+}
+
+
+
+
+
 Json::Value BotWarzApp::getBotCommands(void)
 {
 	return m_Controller->getBotCommands();
