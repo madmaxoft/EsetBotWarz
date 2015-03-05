@@ -36,6 +36,9 @@ protected:
 	{
 		// Save the link for later use:
 		m_Comm.m_Link = a_Link;
+
+		// Disable NAGLE:
+		a_Link->EnableNoDelay();
 	}
 
 	virtual void OnReceivedData(const char * a_Data, size_t a_Length) override
@@ -75,7 +78,9 @@ Comm::Comm(BotWarzApp & a_App):
 	m_ShouldShowComm(false),
 	m_ShouldLogComm(false),
 	m_CommLogFile(nullptr),
-	m_Status(csConnecting)
+	m_Status(csConnecting),
+	m_ShouldTerminate(false),
+	m_CommandSenderThread(&Comm::commandSenderThread, this)
 {
 }
 
@@ -118,8 +123,11 @@ bool Comm::init(bool a_ShouldLogComm, bool a_ShouldShowComm)
 
 void Comm::stop(void)
 {
-	// Nothing needed yet
-	// TODO: wait for the update sender thread
+	// Wake up the update sender thread and wait for it to terminate:
+	m_ShouldTerminate = true;
+	m_evtGameStart.Set();
+	m_evtGameUpdate.Set();
+	m_CommandSenderThread.join();
 }
 
 
@@ -187,7 +195,7 @@ void Comm::openCommLogFile(void)
 
 	// Open the log file:
 	#ifdef _MSC_VER
-		fopen_s(&m_CommLogFile, FileName.c_str(), "w");
+		m_CommLogFile = _fsopen(FileName.c_str(), "w", _SH_DENYWR);
 	#else
 		m_CommLogFile = fopen(FileName.c_str(), "w");
 	#endif
@@ -409,6 +417,7 @@ void Comm::processGame(const Json::Value & a_Response)
 		a_Response["game"]["players"][1]["nickname"].asCString()
 	);
 	m_App.startGame(a_Response["game"]);
+	m_evtGameStart.Set();
 }
 
 
@@ -427,6 +436,7 @@ void Comm::processPlay(const Json::Value & a_Response)
 	}
 
 	m_App.updateBoard(a_Response["play"]);
+	m_evtGameUpdate.Set();
 }
 
 
@@ -475,6 +485,48 @@ void Comm::abortConnection(void)
 
 	// Terminate the entire app:
 	m_App.terminate();
+}
+
+
+
+
+
+void Comm::commandSenderThread(void)
+{
+	while (!m_ShouldTerminate)
+	{
+		// Wait for the game start:
+		m_evtGameStart.Wait();
+
+		while (m_Status == csGame)
+		{
+			// Send the commands:
+			sendCommands();
+
+			// Wait for the game update:
+			m_evtGameUpdate.Wait();
+			std::this_thread::sleep_for(std::chrono::milliseconds(210));  // A bit more time to keep it safe
+		}  // while (csGame)
+	}  // while (!m_ShouldTerminate)
+}
+
+
+
+
+
+
+void Comm::sendCommands(void)
+{
+	static int counter = 1;
+	Json::Value cmds;
+	cmds["cmdId"] = counter++;
+	cmds["bots"] = m_App.getBotCommands();
+	if (cmds["bots"].empty())
+	{
+		LOGD("No commands to send, skipping this round.");
+		return;
+	}
+	send(cmds);
 }
 
 

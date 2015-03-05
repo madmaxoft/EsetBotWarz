@@ -25,6 +25,7 @@ public:
 		m_LuaState(Printf("LuaController: %s", a_FileName.c_str()))
 	{
 		m_LuaState.create();
+		lua_atpanic(m_LuaState, luaPanic);
 		if (a_ShouldDebugZBS)
 		{
 			m_LuaState.execCode("require([[mobdebug]]).start()");
@@ -129,7 +130,7 @@ public:
 	Also clears the commands, so that they aren't sent the next time this is called. */
 	virtual Json::Value getBotCommands(void) override
 	{
-		Json::Value res;
+		Json::Value res(Json::arrayValue);
 
 		// Check that the Lua state is valid:
 		cCSLock Lock(m_CSLuaState);
@@ -152,6 +153,12 @@ public:
 		for (auto & bot : myBots)
 		{
 			lua_rawgeti(m_LuaState, -1, bot->m_ID);  // Stack: [GBT] [botCommands] [bot]
+			if (!lua_istable(m_LuaState, -1))
+			{
+				// The entry isn't a table, nothing to query
+				lua_pop(m_LuaState, 1);
+				continue;
+			}
 			lua_getfield(m_LuaState, -1, "cmd");     // Stack: [GBT] [botCommands] [bot] [.cmd]
 			AString cmd;
 			m_LuaState.getStackValue(-1, cmd);
@@ -167,6 +174,7 @@ public:
 				toPop = 3;
 			}
 			lua_pop(m_LuaState, toPop);              // Stack: [GBT] [botCommands]
+			val["id"] = bot->m_ID;
 			res.append(val);
 
 			// Clear the command:
@@ -291,6 +299,20 @@ protected:
 			lua_rawseti(m_LuaState, -2, b.m_ID);       // Stack: [GBT] [allBots]
 		}  // for bot - allBots[]
 		lua_setfield(m_LuaState, -2, "allBots");
+	}
+
+
+
+
+	static int luaPanic(lua_State * a_LuaState)
+	{
+		LOGERROR("*** LUA PANIC ***");
+		LuaState L(a_LuaState);
+		AString panicString;
+		L.getStackValue(-1, panicString);
+		LOGERROR("%s", panicString.c_str());
+		L.logStackTrace();
+		return 1;
 	}
 };
 

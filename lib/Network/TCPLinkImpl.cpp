@@ -177,6 +177,16 @@ void cTCPLinkImpl::Close(void)
 
 
 
+void cTCPLinkImpl::EnableNoDelay(bool a_EnableNoDelay)
+{
+	char val = a_EnableNoDelay ? 1 : 0;
+	setsockopt(bufferevent_getfd(m_BufferEvent), IPPROTO_TCP, TCP_NODELAY, &val, 1);
+}
+
+
+
+
+
 void cTCPLinkImpl::ReadCallback(bufferevent * a_BufferEvent, void * a_Self)
 {
 	ASSERT(a_Self != nullptr);

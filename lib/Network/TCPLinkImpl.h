@@ -64,6 +64,7 @@ public:
 	virtual UInt16 GetRemotePort(void) const override { return m_RemotePort; }
 	virtual void Shutdown(void) override;
 	virtual void Close(void) override;
+	virtual void EnableNoDelay(bool a_EnableNoDelay = true) override;
 
 protected:
 

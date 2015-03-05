@@ -90,6 +90,9 @@ public:
 	Sends the RST packet, queued outgoing and incoming data is lost. */
 	virtual void Close(void) = 0;
 
+	/** Sets the TCP_NODELAY option on the socket. */
+	virtual void EnableNoDelay(bool a_EnableNoDelay = true) = 0;
+
 	/** Returns the callbacks that are used. */
 	cCallbacksPtr GetCallbacks(void) const { return m_Callbacks; }
 

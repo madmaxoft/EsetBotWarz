@@ -39,7 +39,7 @@ function onGameUpdate(a_Game)
 	print("LUA: onGameUpdate")
 	-- listBots(a_Game)
 	
-	local cmd = {cmd = "turn", angle = a_Game.speedLevels[2].maxAngularSpeed}
+	local cmd = {cmd = "steer", angle = a_Game.speedLevels[2].maxAngularSpeed}
 	if not(a_Game.botCommands[1]) then
 		-- The previous command has been sent, send another one:
 		a_Game.botCommands[1] = cmd

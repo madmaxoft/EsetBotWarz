@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <thread>
 #include "lib/Network/Network.h"
 #include "lib/Network/Event.h"
 
@@ -86,6 +87,18 @@ protected:
 	/** The current status of the connection. */
 	Status m_Status;
 
+	/** Flag that tells everything that it should terminate as soon as possible. */
+	bool m_ShouldTerminate;
+
+	/** Event that is set when a game is started. */
+	cEvent m_evtGameStart;
+
+	/** Event that is set on each game update received. */
+	cEvent m_evtGameUpdate;
+
+	/** The thread that queries the controller for new commands and sends them to the server, timed apart. */
+	std::thread m_CommandSenderThread;
+
 
 	/** Creates and opens the comm log file. */
 	void openCommLogFile(void);
@@ -120,6 +133,12 @@ protected:
 
 	/** Severs the connection to the server and shuts down the comm interface. */
 	void abortConnection(void);
+
+	/** Runs the thread that periodically sends commands to the server. */
+	void commandSenderThread(void);
+
+	/** Sends the current commands to the server. */
+	void sendCommands(void);
 };
 
 

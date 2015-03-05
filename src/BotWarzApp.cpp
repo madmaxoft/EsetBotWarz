@@ -38,6 +38,7 @@ int BotWarzApp::run(bool a_ShouldLogComm, bool a_ShouldShowComm, const AString &
 		return 2;
 	}
 
+	/*
 	// DEBUG: test the controller by processing a dummy game:
 	Json::Value gameData, updateData1, updateData2, finishData;
 	std::ifstream("gameData.json") >> gameData;
@@ -50,7 +51,9 @@ int BotWarzApp::run(bool a_ShouldLogComm, bool a_ShouldShowComm, const AString &
 	finishGame(finishData["result"]);
 
 	LOGERROR("Temporary termination.");
+	m_Comm.stop();
 	return 1;
+	*/
 
 	// Initialize the server communication interface:
 	if (!m_Comm.init(a_ShouldLogComm, a_ShouldShowComm))
@@ -135,6 +138,15 @@ void BotWarzApp::botDied(const Bot & a_Bot)
 	{
 		controller->onBotDied(a_Bot);
 	}
+}
+
+
+
+
+
+Json::Value BotWarzApp::getBotCommands(void)
+{
+	return m_Controller->getBotCommands();
 }
 
 

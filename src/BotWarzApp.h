@@ -59,6 +59,8 @@ public:
 	const AString & getLoginToken(void) const { return m_LoginToken; }
 	const AString & getLoginNick(void) const { return m_LoginNick; }
 
+	Json::Value getBotCommands(void);
+
 protected:
 	/** The representation of the game board. */
 	Board m_Board;
