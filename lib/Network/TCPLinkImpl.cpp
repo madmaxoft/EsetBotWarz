@@ -8,6 +8,9 @@
 #include "NetworkSingleton.h"
 #include "ServerHandleImpl.h"
 #include "event2/buffer.h"
+#ifndef _WIN32
+	#include <netinet/tcp.h>
+#endif
 
 
 
