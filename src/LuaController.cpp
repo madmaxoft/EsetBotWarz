@@ -286,6 +286,8 @@ protected:
 		lua_setfield(m_LuaState, -2, "width");                  // Stack: [GBT] [WT]
 		lua_pushnumber(m_LuaState, m_Board->getWorldHeight());  // Stack: [GBT] [WT] [Height]
 		lua_setfield(m_LuaState, -2, "height");                 // Stack: [GBT] [WT]
+		lua_pushnumber(m_LuaState, m_Board->getBotRadius());    // Stack: [GBT] [WT] [Radius]
+		lua_setfield(m_LuaState, -2, "botRadius");              // Stack: [GBT] [WT]
 
 		// Store the World table in GameBoard table:
 		lua_setfield(m_LuaState, -2, "world");  // Stack: [GBT]

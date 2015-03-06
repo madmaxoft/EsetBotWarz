@@ -61,6 +61,7 @@ public:
 	const SpeedLevels & getSpeedLevels(void) const { return m_SpeedLevels; }
 	double getWorldWidth(void) const { return m_Width; }
 	double getWorldHeight(void) const { return m_Height; }
+	double getBotRadius(void) const { return m_BotRadius; }
 
 	/** Returns a copy of the m_MyBots field, in a thread-safe way. */
 	BotPtrs getMyBotsCopy(void) const;
