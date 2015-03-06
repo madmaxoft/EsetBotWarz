@@ -92,12 +92,28 @@ Comm::Comm(BotWarzApp & a_App):
 
 bool Comm::init(bool a_ShouldLogComm, bool a_ShouldShowComm)
 {
+	// Create the folder for the logs, if not already present:
+	#ifdef _WIN32
+		CreateDirectoryA("CommLogs", nullptr);
+	#else
+		mkdir("CommLogs", S_IRWXU | S_IRWXG | S_IRWXO);
+	#endif
+
 	// Open the comm log file, if requested:
+	AString fileNameBase = getLogFileNameBase();
 	if (a_ShouldLogComm)
 	{
-		openCommLogFile();
+		openCommLogFile(fileNameBase + ".txt");
 	}
 	m_ShouldShowComm = a_ShouldShowComm;
+
+	// Always open the binary log file:
+	fileNameBase.append(".ebwlog");
+	#ifdef _WIN32
+		m_BinCommLogFile = _fsopen(fileNameBase.c_str(), "wb", _SH_DENYWR);
+	#else
+		m_BinCommLogFile = _fopen(fileNameBase.c_str(), "wb");
+	#endif
 
 	// Connect to the server:
 	auto callbacks = std::make_shared<Callbacks>(*this);
@@ -147,7 +163,7 @@ void Comm::stop(void)
 void Comm::send(const AString & a_Data)
 {
 	// Log to file, if requested:
-	commLog(Printf("OUT: %s", a_Data.c_str()));
+	commLog(dkOut, a_Data);
 
 	m_Link->Send(a_Data);
 }
@@ -168,21 +184,51 @@ void Comm::send(const Json::Value & a_Data)
 
 
 
-void Comm::commLog(const AString & a_Msg)
+void Comm::commLog(Comm::DataKind a_Kind, const AString & a_Data)
 {
-	// Show on stdout, if requested:
+	AString msg;
 	double timeOffset = static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - m_CommLogBeginTime).count()) / 1000;
+	switch (a_Kind)
+	{
+		case dkIn:
+		{
+			Printf(msg, "%9.3f  IN: %s", timeOffset, a_Data.c_str());
+			break;
+		}
+		case dkOut:
+		{
+			Printf(msg, "%9.3f OUT: %s", timeOffset, a_Data.c_str());
+			break;
+		}
+		case dkComment:
+		{
+			Printf(msg, "%9.3f      %s", timeOffset, a_Data.c_str());
+			break;
+		}
+	}
+
+	// Show on stdout, if requested:
 	if (m_ShouldShowComm)
 	{
-		printf("%9.3f %s", timeOffset, a_Msg.c_str());
+		printf("%s", msg.c_str());
 	}
 
 	// Output to file, if requested:
 	cCSLock Lock(m_CSCommLog);
 	if (m_ShouldLogComm)
 	{
-		fprintf(m_CommLogFile, "%9.3f %s", timeOffset, a_Msg.c_str());
+		fprintf(m_CommLogFile, "%s", msg.c_str());
 		fflush(m_CommLogFile);
+	}
+
+	// Always write a binary log:
+	if (m_BinCommLogFile != nullptr)
+	{
+		char kind = static_cast<char>(a_Kind);
+		fwrite(&kind, 1, 1, m_BinCommLogFile);
+		UInt32 len = htonl(static_cast<UInt32>(a_Data.size()));
+		fwrite(&len, 4, 1, m_BinCommLogFile);
+		fwrite(a_Data.data(), a_Data.size(), 1, m_BinCommLogFile);
 	}
 }
 
@@ -190,36 +236,13 @@ void Comm::commLog(const AString & a_Msg)
 
 
 
-void Comm::openCommLogFile(void)
+void Comm::openCommLogFile(const AString & a_FileName)
 {
-	// Compose the log file name:
-	time_t rawtime;
-	time(&rawtime);
-	struct tm * timeinfo;
-	#ifdef _MSC_VER
-		struct tm timeinforeal;
-		timeinfo = &timeinforeal;
-		localtime_s(timeinfo, &rawtime);
-	#else
-		timeinfo = localtime(&rawtime);
-	#endif
-	AString FileName = Printf("CommLogs/%02d-%02d-%02d-%02d-%02d-%02d.txt", 
-		(timeinfo->tm_year + 1900), (timeinfo->tm_mon + 1), timeinfo->tm_mday,
-		timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec
-	);
-
-	// Create the folder for the logs, if not already present:
-	#ifdef _WIN32
-		CreateDirectoryA("CommLogs", nullptr);
-	#else
-		mkdir("CommLogs", S_IRWXU | S_IRWXG | S_IRWXO);
-	#endif
-
 	// Open the log file:
 	#ifdef _MSC_VER
-		m_CommLogFile = _fsopen(FileName.c_str(), "w", _SH_DENYWR);
+		m_CommLogFile = _fsopen(a_FileName.c_str(), "w", _SH_DENYWR);
 	#else
-		m_CommLogFile = fopen(FileName.c_str(), "w");
+		m_CommLogFile = fopen(a_FileName.c_str(), "w");
 	#endif
 	m_ShouldLogComm = (m_CommLogFile != nullptr);
 	m_CommLogBeginTime = std::chrono::high_resolution_clock::now();
@@ -231,7 +254,7 @@ void Comm::openCommLogFile(void)
 void Comm::onIncomingData(const AString & a_Data)
 {
 	// Log to file / screen, if requested:
-	commLog(Printf("IN:  %s\n", a_Data.c_str()));
+	commLog(dkIn, a_Data);
 
 	// Process the data, linewise:
 	auto queuedEnd = m_QueuedData.size();
@@ -535,6 +558,29 @@ void Comm::sendCommands(void)
 	cmds["cmdId"] = ++m_LastSentCmdId;
 	cmds["bots"] = m_App.getBotCommands();
 	send(cmds);
+}
+
+
+
+
+
+AString Comm::getLogFileNameBase(void) const
+{
+	// Compose the log file name from the current time:
+	time_t rawtime;
+	time(&rawtime);
+	struct tm * timeinfo;
+	#ifdef _MSC_VER
+		struct tm timeinforeal;
+		timeinfo = &timeinforeal;
+		localtime_s(timeinfo, &rawtime);
+	#else
+		timeinfo = localtime(&rawtime);
+	#endif
+	return Printf("CommLogs/%02d-%02d-%02d-%02d-%02d-%02d", 
+		(timeinfo->tm_year + 1900), (timeinfo->tm_mon + 1), timeinfo->tm_mday,
+		timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec
+	);
 }
 
 

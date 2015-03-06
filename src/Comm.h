@@ -32,6 +32,15 @@ namespace Json
 class Comm
 {
 public:
+	/** For logging purposes, the kind of the data that is being logged. */
+	enum DataKind
+	{
+		dkIn      = 1,   // Data received from the server
+		dkOut     = 2,   // Data sent to the server
+		dkComment = 32,  // Other data (comment, from plugins etc.)
+	};
+
+
 	Comm(BotWarzApp & a_App);
 
 	/** Initializes the subsystem.
@@ -52,7 +61,7 @@ public:
 	/** Outputs the message to the commlog, if logging is enabled.
 	Prefixes each message with a timestamp since the logfile creation.
 	A newline is not included in the output message, caller needs to provide one. */
-	void commLog(const AString & a_Msg);
+	void commLog(DataKind a_Kind, const AString & a_Msg);
 
 protected:
 	friend class Callbacks;
@@ -81,6 +90,9 @@ protected:
 	/** File into which all the communication is logged, if m_ShouldLogComm is true.
 	Protected against multithreaded writes by m_CSCommLog. */
 	FILE * m_CommLogFile;
+
+	/** File into which all the communication is binary-logged. */
+	FILE * m_BinCommLogFile;
 
 	/** Mutex protecting m_CommLogFile against multithreaded writes. */
 	cCriticalSection m_CSCommLog;
@@ -120,7 +132,7 @@ protected:
 
 
 	/** Creates and opens the comm log file. */
-	void openCommLogFile(void);
+	void openCommLogFile(const AString & a_FileName);
 
 	/** Waits until the handshake is completed in the network thread. */
 	bool waitForHandshakeCompletion(void);
@@ -158,6 +170,9 @@ protected:
 
 	/** Sends the current commands to the server. */
 	void sendCommands(void);
+
+	/** Creates the filename base for log files (binary and text). */
+	AString getLogFileNameBase(void) const;
 };
 
 

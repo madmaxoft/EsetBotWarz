@@ -142,7 +142,7 @@ void BotWarzApp::botDied(const Bot & a_Bot)
 
 void BotWarzApp::commLog(const AString & a_Msg)
 {
-	m_Comm.commLog(a_Msg);
+	m_Comm.commLog(Comm::dkComment, a_Msg);
 }
 
 
