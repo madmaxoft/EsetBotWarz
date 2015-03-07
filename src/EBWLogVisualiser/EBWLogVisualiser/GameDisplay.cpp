@@ -68,21 +68,22 @@ void GameDisplay::paintEvent(QPaintEvent * a_Event)
 	paintBotCommands(p);
 
 	// Paint the game state:
-	static QColor teamColors[2] =
+	static const QColor teamColors[2] =
 	{
 		QColor(192, 0, 0),
 		QColor(0, 0, 255),
 	};
-	static QPen teamEllipsePens[2] =
+	static const QPen teamEllipsePens[2] =
 	{
 		QPen(QBrush(teamColors[0]), 4),
 		QPen(QBrush(teamColors[1]), 4),
 	};
-	static QPen teamDetailPens[2] =
+	static const QPen teamDetailPens[2] =
 	{
 		QPen(QBrush(teamColors[0]), 0),
 		QPen(QBrush(teamColors[1]), 0),
 	};
+	static const QPen textPen = QPen(QColor(255, 255, 255));
 	p.setBrush(QBrush(Qt::NoBrush));
 	for (auto & b: gameState->m_Bots)
 	{
@@ -95,6 +96,8 @@ void GameDisplay::paintEvent(QPaintEvent * a_Event)
 		p.drawLine(b->m_X, b->m_Y, b->m_X + 20 * cos(angle), b->m_Y + 20 * sin(angle));
 		angle = b->m_Angle / 180 * 3.1415926;
 		p.drawLine(b->m_X, b->m_Y, b->m_X + b->m_Speed * cos(angle), b->m_Y + b->m_Speed * sin(angle));
+		p.setPen(textPen);
+		p.drawText(b->m_X + 20, b->m_Y + 20, QString::number(b->m_ID));
 	}  // for b - gameState->m_Bots[]
 }
 
