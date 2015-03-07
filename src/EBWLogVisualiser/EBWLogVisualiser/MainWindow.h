@@ -34,6 +34,9 @@ public:
 	explicit MainWindow(QWidget * parent = nullptr);
 	~MainWindow();
 
+	/** Loads the game data from the specified file. */
+	void loadFile(const QString & a_FileName);
+
 private slots:
 	void on_actFileOpen_triggered();
 

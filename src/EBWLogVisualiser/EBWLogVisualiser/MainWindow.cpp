@@ -34,15 +34,10 @@ MainWindow::~MainWindow()
 
 
 
-void MainWindow::on_actFileOpen_triggered()
+void MainWindow::loadFile(const QString & a_FileName)
 {
-	QString fnam = QFileDialog::getOpenFileName(this, tr("Open log file"), QString(), tr("EBW log files (*.ebwlog)"));
-	if (fnam.isEmpty())
-	{
-		return;
-	}
 	auto logFile = std::make_shared<LogFile>();
-	auto err = logFile->readFile(fnam);
+	auto err = logFile->readFile(a_FileName);
 	if (!err.isEmpty())
 	{
 		QMessageBox::warning(this, tr("Error"), err);
@@ -66,6 +61,20 @@ void MainWindow::on_actFileOpen_triggered()
 	{
 		ui->gameList->item(0)->setSelected(true);
 	}
+}
+
+
+
+
+
+void MainWindow::on_actFileOpen_triggered()
+{
+	QString fnam = QFileDialog::getOpenFileName(this, tr("Open log file"), QString(), tr("EBW log files (*.ebwlog)"));
+	if (fnam.isEmpty())
+	{
+		return;
+	}
+	loadFile(fnam);
 }
 
 
