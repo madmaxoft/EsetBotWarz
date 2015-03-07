@@ -88,8 +88,20 @@ void MainWindow::on_gameList_itemSelectionChanged()
 	{
 		return;
 	}
-	auto game = m_LogFile->getGames()[sel.front()->data(Qt::UserRole).toInt()];
-	ui->gameTimeline->setGame(game);
+	m_CurrentGame = m_LogFile->getGames()[sel.front()->data(Qt::UserRole).toInt()];
+	ui->gameTimeline->setGame(m_CurrentGame);
+}
+
+
+
+
+
+void MainWindow::on_gameTimeline_currentTimeChanged(quint64 a_CurrentTime)
+{
+	auto gameState = m_CurrentGame->getGameStateAt(a_CurrentTime);
+	ui->gameDisplay->setGameState(gameState);
+	auto botCommands = m_CurrentGame->getBotCommandsAt(a_CurrentTime);
+	ui->gameDisplay->setBotCommands(botCommands);
 }
 
 

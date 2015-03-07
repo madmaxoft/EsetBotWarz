@@ -36,6 +36,7 @@ void TimelineControl::setGame(GamePtr a_Game)
 	{
 		m_CurrentTime = m_TotalTime;
 	}
+	setCurrentTime(m_CurrentTime);
 	update();
 }
 

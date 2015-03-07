@@ -24,14 +24,13 @@ GameState::GameState(void):
 
 
 
-GameState::GameState(quint64 a_ClientTime, int a_ServerTime, const QJsonValue & a_Json):
+GameState::GameState(quint64 a_ClientTime, int a_ServerTime, const QJsonArray & a_JsonPlayers):
 	m_ClientTime(a_ClientTime),
 	m_ServerTime(a_ServerTime),
 	m_RequestedTime(a_ClientTime)
 {
-	auto players = a_Json.toArray();
 	int idx = 0;
-	for (auto & player: players)
+	for (auto & player: a_JsonPlayers)
 	{
 		auto bots = player.toObject()["bots"].toArray();
 		for (auto & bot: bots)
@@ -40,6 +39,22 @@ GameState::GameState(quint64 a_ClientTime, int a_ServerTime, const QJsonValue & 
 		}
 		++idx;
 	}  // for player - players[]
+}
+
+
+
+
+
+BotPtr GameState::getBotByID(int a_BotID)
+{
+	for (auto & b: m_Bots)
+	{
+		if (b->m_ID == a_BotID)
+		{
+			return b;
+		}
+	}
+	return nullptr;
 }
 
 

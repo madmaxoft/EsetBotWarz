@@ -17,7 +17,7 @@
 class Bot;
 typedef std::shared_ptr<Bot> BotPtr;
 typedef std::vector<BotPtr> BotPtrs;
-class QJsonValue;
+class QJsonArray;
 
 
 
@@ -47,7 +47,10 @@ public:
 
 	/** Creates a new instance and initializes it from the specified json.
 	a_Json is the contents of the "players" object in the server message. */
-	GameState(quint64 a_ClientTime, int a_ServerTime, const QJsonValue & a_Json);
+	GameState(quint64 a_ClientTime, int a_ServerTime, const QJsonArray & a_JsonPlayers);
+
+	/** Returns the bot out of m_Bots that has the specified ID, or nullptr if no such bot. */
+	BotPtr getBotByID(int a_BotID);
 };
 
 typedef std::shared_ptr<GameState> GameStatePtr;

@@ -95,6 +95,50 @@ void Game::finish(quint64 a_ClientTime, const QJsonValue & a_Json)
 
 
 
+GameStatePtr Game::getGameStateAt(quint64 a_RelClientTime)
+{
+	a_RelClientTime += m_GameStartTime;
+	for (auto itr = m_GameStates.cbegin(), end = m_GameStates.cend(), prevItr = itr; itr != end; ++itr)
+	{
+		if ((*itr)->m_ClientTime == a_RelClientTime)
+		{
+			return *itr;
+		}
+		if ((*itr)->m_ClientTime > a_RelClientTime)
+		{
+			return *prevItr;
+		}
+		prevItr = itr;
+	}  // for itr - m_GameStates[]
+	return m_GameStates.back();
+}
+
+
+
+
+
+BotCommandsPtr Game::getBotCommandsAt(quint64 a_RelClientTime)
+{
+	a_RelClientTime += m_GameStartTime;
+	for (auto itr = m_BotCommands.cbegin(), end = m_BotCommands.cend(), prevItr = itr; itr != end; ++itr)
+	{
+		if ((*itr)->m_ClientTime == a_RelClientTime)
+		{
+			return *itr;
+		}
+		if ((*itr)->m_ClientTime > a_RelClientTime)
+		{
+			return *prevItr;
+		}
+		prevItr = itr;
+	}  // for itr - m_BotCommands[]
+	return m_BotCommands.back();
+}
+
+
+
+
+
 void Game::getGameStateTimestamps(std::vector<quint64> & a_Timestamps)
 {
 	a_Timestamps.reserve(m_GameStates.size());

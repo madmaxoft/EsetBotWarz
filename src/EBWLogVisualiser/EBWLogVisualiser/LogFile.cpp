@@ -93,7 +93,7 @@ QString LogFile::readFile(const QString & a_FileName)
 						// Create a new game object:
 						curGameState = std::make_shared<GameState>(
 							timeStamp, (*itrGame).toObject()["time"].toInt(),
-							*itrGame
+							(*itrGame).toObject()["players"].toArray()
 						);
 						curGame = std::make_shared<Game>(timeStamp, curGameState, *itrGame);
 						m_Games.push_back(curGame);
@@ -105,8 +105,9 @@ QString LogFile::readFile(const QString & a_FileName)
 					if ((itrPlay != jsonObj.end()) && (curGame != nullptr))
 					{
 						// Create a new game state object:
+						auto play = (*itrPlay).toObject();
 						curGameState = std::make_shared<GameState>(
-							timeStamp, (*itrPlay).toObject()["time"].toInt(), *itrPlay
+							timeStamp, play["time"].toInt(), play["players"].toArray()
 						);
 						curGame->addGameState(curGameState);
 						continue;

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>917</width>
+    <width>1045</width>
     <height>695</height>
    </rect>
   </property>
@@ -93,8 +93,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>917</width>
-     <height>21</height>
+     <width>1045</width>
+     <height>18</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -141,6 +141,9 @@
    <extends>QWidget</extends>
    <header>TimelineControl.h</header>
    <container>1</container>
+   <slots>
+    <signal>currentTimeChanged(quit64)</signal>
+   </slots>
   </customwidget>
  </customwidgets>
  <resources/>

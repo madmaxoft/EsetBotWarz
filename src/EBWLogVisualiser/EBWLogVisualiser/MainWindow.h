@@ -18,6 +18,8 @@ namespace Ui {
 }
 class LogFile;
 typedef std::shared_ptr<LogFile> LogFilePtr;
+class Game;
+typedef std::shared_ptr<Game> GamePtr;
 
 
 
@@ -39,10 +41,13 @@ private slots:
 
 	void on_gameList_itemSelectionChanged();
 
+	void on_gameTimeline_currentTimeChanged(quint64 a_CurrentTime);
+
 private:
 	Ui::MainWindow * ui;
 
 	LogFilePtr m_LogFile;
+	GamePtr m_CurrentGame;
 };
 
 
