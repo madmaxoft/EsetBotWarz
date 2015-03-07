@@ -43,15 +43,22 @@ EsetBotWarz.dir/
 *.pdb
 *.ilk
 ipch/
+Makefile
+Makefile.Debug
+Makefile.Release
 
 # CMake-generated files:
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
 
+# Qt-generated files:
+ui_MainWindow.h
+
 # Runtime files:
 src/login.txt
-src/CommLogs/
+out/CommLogs/
+*.ebwlog
 
 # Linux build files:
 Debug/
