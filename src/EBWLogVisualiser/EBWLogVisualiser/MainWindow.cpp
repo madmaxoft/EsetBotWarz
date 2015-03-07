@@ -9,6 +9,7 @@
 #include "ui_MainWindow.h"
 #include "LogFile.h"
 #include "Game.h"
+#include "GameState.h"
 
 
 
@@ -111,6 +112,11 @@ void MainWindow::on_gameTimeline_currentTimeChanged(quint64 a_CurrentTime)
 	ui->gameDisplay->setGameState(gameState);
 	auto botCommands = m_CurrentGame->getBotCommandsAt(a_CurrentTime);
 	ui->gameDisplay->setBotCommands(botCommands);
+	auto gameTime = gameState->m_ServerTime;
+	ui->statusBar->showMessage(QString("Current time: %1, game time: %2")
+		.arg(static_cast<double>(a_CurrentTime) / 1000)
+		.arg(gameTime)
+	);
 }
 
 
