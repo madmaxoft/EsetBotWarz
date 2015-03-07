@@ -114,6 +114,8 @@ bool Comm::init(bool a_ShouldLogComm, bool a_ShouldShowComm)
 	#else
 		m_BinCommLogFile = _fopen(fileNameBase.c_str(), "wb");
 	#endif
+	char versionHeader[] = "EBWLog\x00\x01";
+	fwrite(versionHeader, 8, 1, m_BinCommLogFile);
 
 	// Connect to the server:
 	auto callbacks = std::make_shared<Callbacks>(*this);
@@ -187,7 +189,8 @@ void Comm::send(const Json::Value & a_Data)
 void Comm::commLog(Comm::DataKind a_Kind, const AString & a_Data)
 {
 	AString msg;
-	double timeOffset = static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - m_CommLogBeginTime).count()) / 1000;
+	UInt64 microSecOffset = static_cast<UInt64>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - m_CommLogBeginTime).count());
+	double timeOffset = static_cast<double>(microSecOffset) / 1000;
 	switch (a_Kind)
 	{
 		case dkIn:
@@ -224,6 +227,10 @@ void Comm::commLog(Comm::DataKind a_Kind, const AString & a_Data)
 	// Always write a binary log:
 	if (m_BinCommLogFile != nullptr)
 	{
+		UInt32 timeLow  = htonl(static_cast<UInt32>(microSecOffset));
+		UInt32 timeHigh = htonl(static_cast<UInt32>(microSecOffset >> 32));
+		fwrite(&timeHigh, 4, 1, m_BinCommLogFile);
+		fwrite(&timeLow, 4, 1, m_BinCommLogFile);
 		char kind = static_cast<char>(a_Kind);
 		fwrite(&kind, 1, 1, m_BinCommLogFile);
 		UInt32 len = htonl(static_cast<UInt32>(a_Data.size()));
