@@ -120,10 +120,13 @@ void GameDisplay::paintBotCommands(QPainter & a_Painter)
 	}
 
 	// Define brushes to use:
-	static const QBrush brushAccel = QBrush(QColor(0, 192, 0));
-	static const QBrush brushBrake = QBrush(QColor(255, 0, 0));
-	static const QBrush brushSteer = QBrush(QColor(192, 192, 0));
-	static const QBrush brushUnknown = QBrush(QColor(0, 0, 0));
+	static const QBrush brushAccel   = QBrush(QColor(0,   192, 0));
+	static const QPen   penAccel     = QPen  (QColor(0,   192, 0));
+	static const QBrush brushBrake   = QBrush(QColor(255,   0, 0));
+	static const QPen   penBrake     = QPen  (QColor(255,   0, 0));
+	static const QBrush brushSteer   = QBrush(QColor(192, 192, 0));
+	static const QBrush brushUnknown = QBrush(QColor(0,     0, 0));
+	static const QPen   penSteer     = QPen  (QColor(192, 192, 0));
 
 	// Paint each command:
 	for (auto & c: botCommands->m_Commands)
@@ -141,21 +144,22 @@ void GameDisplay::paintBotCommands(QPainter & a_Painter)
 			case BotCommands::cmdAccelerate:
 			{
 				a_Painter.setBrush(brushAccel);
+				a_Painter.setPen(penAccel);
 				a_Painter.drawEllipse(bot->m_X - 10, bot->m_Y - 10, 20, 20);
 				break;
 			}
 			case BotCommands::cmdBrake:
 			{
 				a_Painter.setBrush(brushBrake);
+				a_Painter.setPen(penBrake);
 				a_Painter.drawEllipse(bot->m_X - 10, bot->m_Y - 10, 20, 20);
 				break;
 			}
 			case BotCommands::cmdSteer:
 			{
-				int startAngle = -bot->m_Angle * 16;
-				int endAngle = static_cast<int>((-c.m_Param - bot->m_Angle) * 16);
-				a_Painter.setBrush(brushSteer);
-				a_Painter.drawPie(bot->m_X - 50, bot->m_Y - 50, 101, 101, startAngle, endAngle);
+				a_Painter.setPen(penSteer);
+				double angle = (bot->m_Angle + c.m_Param) / 180 * 3.1415926;
+				a_Painter.drawLine(bot->m_X, bot->m_Y, bot->m_X + 400 * cos(angle), bot->m_Y + 400 * sin(angle));
 				break;
 			}
 			case BotCommands::cmdUnknown:
