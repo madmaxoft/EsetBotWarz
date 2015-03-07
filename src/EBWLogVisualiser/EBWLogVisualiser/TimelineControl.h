@@ -32,6 +32,8 @@ public:
 	void setGame(GamePtr a_Game);
 
 signals:
+	/** The current time has been changed. */
+	void currentTimeChanged(quint64 a_CurrentTime);
 
 public slots:
 
@@ -64,6 +66,12 @@ protected:
 	/** Called when the widget is resized */
 	virtual void resizeEvent(QResizeEvent *) override;
 
+	/** Called when the user presses any mouse button. */
+	virtual void mousePressEvent(QMouseEvent * a_Event) override;
+
+	/** Called when the user moves the mouse. */
+	virtual void mouseMoveEvent(QMouseEvent * a_Event) override;
+
 	QSize minimumSizeHint() const
 	{
 		return QSize(100, 10);
@@ -79,6 +87,9 @@ protected:
 
 	/** Converts horizontal position on the timeline to relative client time. */
 	quint64 posToRelClientTime(int a_Pos);
+
+	/** Sets the specified current time and calls the signals. */
+	void setCurrentTime(quint64 a_CurrentTime);
 };
 
 
