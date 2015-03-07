@@ -33,6 +33,13 @@ int BotWarzApp::run(bool a_ShouldLogComm, bool a_ShouldShowComm, const AString &
 {
 	m_NumGamesToPlay = a_NumGamesToPlay;
 
+	// Initialize the logging framework:
+	if (!m_Logger.init(a_ShouldLogComm, a_ShouldShowComm))
+	{
+		LOGERROR("Logger init failed, aborting.");
+		return 3;
+	}
+
 	// Initialize the Lua controller:
 	m_Controller = createLuaController(*this, a_ControllerFileName, a_ShouldDebugZBS);
 	if (!m_Controller->isValid())
@@ -42,7 +49,7 @@ int BotWarzApp::run(bool a_ShouldLogComm, bool a_ShouldShowComm, const AString &
 	}
 
 	// Initialize the server communication interface:
-	if (!m_Comm.init(a_ShouldLogComm, a_ShouldShowComm))
+	if (!m_Comm.init())
 	{
 		LOGERROR("Comm::init() failed.");
 		return 1;
@@ -140,9 +147,27 @@ void BotWarzApp::botDied(const Bot & a_Bot)
 
 
 
-void BotWarzApp::commLog(const AString & a_Msg)
+void BotWarzApp::commLog(bool a_IsIncoming, const AString & a_Msg)
 {
-	m_Comm.commLog(Comm::dkComment, a_Msg);
+	m_Logger.commLog(a_IsIncoming, a_Msg);
+}
+
+
+
+
+
+void BotWarzApp::aiLog(int a_BotID, const AString & a_Msg)
+{
+	m_Logger.aiLog(a_BotID, a_Msg);
+}
+
+
+
+
+
+void BotWarzApp::commentLog(const AString & a_Msg)
+{
+	m_Logger.commentLog(a_Msg);
 }
 
 

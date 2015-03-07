@@ -662,10 +662,11 @@ bool LuaState::checkParamFunctionOrNil(int a_StartParam, int a_EndParam)
 
 bool LuaState::checkParamEnd(int a_Param)
 {
-	if (lua_isnil(m_LuaState, a_Param))
+	if (lua_isnoneornil(m_LuaState, a_Param))
 	{
 		return true;
 	}
+
 	// Not an end, report error:
 	lua_Debug entry;
 	VERIFY(lua_getstack(m_LuaState, 0,   &entry));

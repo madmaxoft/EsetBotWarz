@@ -11,6 +11,7 @@
 
 #include "Comm.h"
 #include "Board.h"
+#include "Logger.h"
 #include "lib/Network/Event.h"
 
 
@@ -57,8 +58,14 @@ public:
 	/** Called by updateBoard when a bot death is detected. */
 	void botDied(const Bot & a_Bot);
 
-	/** Outputs a message to the commlog / screen, if requested. Relayed to m_Comm. */
-	void commLog(const AString & a_Msg);
+	/** Outputs a message to the commlog / screen, if requested. Relayed to m_Logger. */
+	void commLog(bool a_IsIncoming, const AString & a_Msg);
+
+	/** Outputs a message to the log, pertaining to a specific bot. Relayed to m_Logger. */
+	void aiLog(int a_BotID, const AString & a_Msg);
+
+	/** Outputs a comment message to the log. Relayed to m_Logger. */
+	void commentLog(const AString & a_Comment);
 
 	const AString & getLoginToken(void) const { return m_LoginToken; }
 	const AString & getLoginNick(void) const { return m_LoginNick; }
@@ -68,6 +75,9 @@ public:
 protected:
 	/** The representation of the game board. */
 	Board m_Board;
+
+	/** The logging framework. */
+	Logger m_Logger;
 
 	/** The AI controller to use for driving the bots. */
 	SharedPtr<Controller> m_Controller;

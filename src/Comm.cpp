@@ -75,9 +75,6 @@ protected:
 
 Comm::Comm(BotWarzApp & a_App):
 	m_App(a_App),
-	m_ShouldShowComm(false),
-	m_ShouldLogComm(false),
-	m_CommLogFile(nullptr),
 	m_Status(csConnecting),
 	m_ShouldTerminate(false),
 	m_LastSentCmdId(1),
@@ -90,33 +87,8 @@ Comm::Comm(BotWarzApp & a_App):
 
 
 
-bool Comm::init(bool a_ShouldLogComm, bool a_ShouldShowComm)
+bool Comm::init(void)
 {
-	// Create the folder for the logs, if not already present:
-	#ifdef _WIN32
-		CreateDirectoryA("CommLogs", nullptr);
-	#else
-		mkdir("CommLogs", S_IRWXU | S_IRWXG | S_IRWXO);
-	#endif
-
-	// Open the comm log file, if requested:
-	AString fileNameBase = getLogFileNameBase();
-	if (a_ShouldLogComm)
-	{
-		openCommLogFile(fileNameBase + ".txt");
-	}
-	m_ShouldShowComm = a_ShouldShowComm;
-
-	// Always open the binary log file:
-	fileNameBase.append(".ebwlog");
-	#ifdef _WIN32
-		m_BinCommLogFile = _fsopen(fileNameBase.c_str(), "wb", _SH_DENYWR);
-	#else
-		m_BinCommLogFile = _fopen(fileNameBase.c_str(), "wb");
-	#endif
-	char versionHeader[] = "EBWLog\x00\x01";
-	fwrite(versionHeader, 8, 1, m_BinCommLogFile);
-
 	// Connect to the server:
 	auto callbacks = std::make_shared<Callbacks>(*this);
 	if (!cNetwork::Connect("botwarz.eset.com", 2000, callbacks, callbacks))
@@ -165,7 +137,7 @@ void Comm::stop(void)
 void Comm::send(const AString & a_Data)
 {
 	// Log to file, if requested:
-	commLog(dkOut, a_Data);
+	m_App.commLog(false, a_Data);
 
 	m_Link->Send(a_Data);
 }
@@ -186,82 +158,10 @@ void Comm::send(const Json::Value & a_Data)
 
 
 
-void Comm::commLog(Comm::DataKind a_Kind, const AString & a_Data)
-{
-	AString msg;
-	UInt64 microSecOffset = static_cast<UInt64>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - m_CommLogBeginTime).count());
-	double timeOffset = static_cast<double>(microSecOffset) / 1000;
-	switch (a_Kind)
-	{
-		case dkIn:
-		{
-			Printf(msg, "%9.3f  IN: %s", timeOffset, a_Data.c_str());
-			break;
-		}
-		case dkOut:
-		{
-			Printf(msg, "%9.3f OUT: %s", timeOffset, a_Data.c_str());
-			break;
-		}
-		case dkComment:
-		{
-			Printf(msg, "%9.3f      %s", timeOffset, a_Data.c_str());
-			break;
-		}
-	}
-
-	// Show on stdout, if requested:
-	if (m_ShouldShowComm)
-	{
-		printf("%s", msg.c_str());
-	}
-
-	// Output to file, if requested:
-	cCSLock Lock(m_CSCommLog);
-	if (m_ShouldLogComm)
-	{
-		fprintf(m_CommLogFile, "%s", msg.c_str());
-		fflush(m_CommLogFile);
-	}
-
-	// Always write a binary log:
-	if (m_BinCommLogFile != nullptr)
-	{
-		UInt32 timeLow  = htonl(static_cast<UInt32>(microSecOffset));
-		UInt32 timeHigh = htonl(static_cast<UInt32>(microSecOffset >> 32));
-		fwrite(&timeHigh, 4, 1, m_BinCommLogFile);
-		fwrite(&timeLow, 4, 1, m_BinCommLogFile);
-		char kind = static_cast<char>(a_Kind);
-		fwrite(&kind, 1, 1, m_BinCommLogFile);
-		UInt32 len = htonl(static_cast<UInt32>(a_Data.size()));
-		fwrite(&len, 4, 1, m_BinCommLogFile);
-		fwrite(a_Data.data(), a_Data.size(), 1, m_BinCommLogFile);
-	}
-}
-
-
-
-
-
-void Comm::openCommLogFile(const AString & a_FileName)
-{
-	// Open the log file:
-	#ifdef _MSC_VER
-		m_CommLogFile = _fsopen(a_FileName.c_str(), "w", _SH_DENYWR);
-	#else
-		m_CommLogFile = fopen(a_FileName.c_str(), "w");
-	#endif
-	m_ShouldLogComm = (m_CommLogFile != nullptr);
-	m_CommLogBeginTime = std::chrono::high_resolution_clock::now();
-}
-
-
-
-
 void Comm::onIncomingData(const AString & a_Data)
 {
 	// Log to file / screen, if requested:
-	commLog(dkIn, a_Data);
+	m_App.commLog(true, a_Data);
 
 	// Process the data, linewise:
 	auto queuedEnd = m_QueuedData.size();
@@ -565,29 +465,6 @@ void Comm::sendCommands(void)
 	cmds["cmdId"] = ++m_LastSentCmdId;
 	cmds["bots"] = m_App.getBotCommands();
 	send(cmds);
-}
-
-
-
-
-
-AString Comm::getLogFileNameBase(void) const
-{
-	// Compose the log file name from the current time:
-	time_t rawtime;
-	time(&rawtime);
-	struct tm * timeinfo;
-	#ifdef _MSC_VER
-		struct tm timeinforeal;
-		timeinfo = &timeinforeal;
-		localtime_s(timeinfo, &rawtime);
-	#else
-		timeinfo = localtime(&rawtime);
-	#endif
-	return Printf("CommLogs/%02d-%02d-%02d-%02d-%02d-%02d", 
-		(timeinfo->tm_year + 1900), (timeinfo->tm_mon + 1), timeinfo->tm_mday,
-		timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec
-	);
 }
 
 

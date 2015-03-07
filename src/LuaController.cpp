@@ -352,23 +352,110 @@ protected:
 
 
 
-	/** Binding for the Comm::commLog() function */
+	/** OBSOLETE binding for the commLog() function. Convert into commentLog. */
 	static int commLog(lua_State * a_LuaState)
 	{
+		// Warn about being obsolete:
+		LuaState L(a_LuaState);
+		LOGWARNING("%s: Function is obsolete, use commentLog instead", __FUNCTION__);
+		L.logStackTrace();
+
+		// Check the params:
+		if (
+			!L.checkParamString(1) ||
+			!L.checkParamEnd(2)
+		)
+		{
+			return 0;
+		}
+
 		// Get the luaController instance from the state:
 		lua_getfield(a_LuaState, LUA_GLOBALSINDEX, LUA_GLOBAL_LUACONTROLLER_FIELD_NAME);
 		if (!lua_islightuserdata(a_LuaState, -1))
 		{
-			LOGWARNING("Cannot find my instance in the Lua state");
+			LOGWARNING("%s: Cannot find my instance in the Lua state", __FUNCTION__);
+			L.logStackTrace();
 			return 0;
 		}
 		LuaController * luaController = reinterpret_cast<LuaController *>(lua_touserdata(a_LuaState, -1));
 		lua_pop(a_LuaState, 1);
 
-		LuaState L(a_LuaState);
+		// Log:
 		AString msg;
 		L.getStackValue(1, msg);
-		luaController->m_App.commLog(msg + "\n");
+		luaController->m_App.commentLog(msg);
+		return 0;
+	}
+
+
+
+
+
+	/** Binding for the commentLog() function. */
+	static int commentLog(lua_State * a_LuaState)
+	{
+		// Check the params:
+		LuaState L(a_LuaState);
+		if (
+			!L.checkParamString(1) ||
+			!L.checkParamEnd(2)
+		)
+		{
+			return 0;
+		}
+
+		// Get the luaController instance from the state:
+		lua_getfield(a_LuaState, LUA_GLOBALSINDEX, LUA_GLOBAL_LUACONTROLLER_FIELD_NAME);
+		if (!lua_islightuserdata(a_LuaState, -1))
+		{
+			LOGWARNING("%s: Cannot find my instance in the Lua state", __FUNCTION__);
+			L.logStackTrace();
+			return 0;
+		}
+		LuaController * luaController = reinterpret_cast<LuaController *>(lua_touserdata(a_LuaState, -1));
+		lua_pop(a_LuaState, 1);
+
+		// Log:
+		AString msg;
+		L.getStackValue(1, msg);
+		luaController->m_App.commentLog(msg);
+		return 0;
+	}
+
+
+
+
+
+	/** Binding for the aiLog() function. */
+	static int aiLog(lua_State * a_LuaState)
+	{
+		// Check the params:
+		LuaState L(a_LuaState);
+		if (
+			!L.checkParamNumber(1) ||
+			!L.checkParamString(2) ||
+			!L.checkParamEnd(3)
+		)
+		{
+			return 0;
+		}
+
+		// Get the luaController instance from the state:
+		lua_getfield(a_LuaState, LUA_GLOBALSINDEX, LUA_GLOBAL_LUACONTROLLER_FIELD_NAME);
+		if (!lua_islightuserdata(a_LuaState, -1))
+		{
+			LOGWARNING("%s: Cannot find my instance in the Lua state", __FUNCTION__);
+			L.logStackTrace();
+			return 0;
+		}
+		LuaController * luaController = reinterpret_cast<LuaController *>(lua_touserdata(a_LuaState, -1));
+		lua_pop(a_LuaState, 1);
+
+		// Log:
+		int botID = 0;
+		AString msg;
+		L.getStackValues(1, botID, msg);
+		luaController->m_App.aiLog(botID, msg);
 		return 0;
 	}
 
@@ -383,8 +470,12 @@ protected:
 		lua_setfield(m_LuaState, LUA_GLOBALSINDEX, LUA_GLOBAL_LUACONTROLLER_FIELD_NAME);
 
 		// Push the API functions:
+		lua_pushcfunction(m_LuaState, &commentLog);
+		lua_setfield(m_LuaState, LUA_GLOBALSINDEX, "commentLog");
 		lua_pushcfunction(m_LuaState, &commLog);
-		lua_setfield(m_LuaState, LUA_GLOBALSINDEX, "commLog");
+		lua_setfield(m_LuaState, LUA_GLOBALSINDEX, "commLog");  // OBSOLETE, but still available in the API
+		lua_pushcfunction(m_LuaState, &aiLog);
+		lua_setfield(m_LuaState, LUA_GLOBALSINDEX, "aiLog");
 	}
 };
 
