@@ -18,9 +18,15 @@
 
 
 
-static const char leDataIn  = 1;
-static const char leDataOut = 2;
-static const char leComment = 32;
+// Various log events in the file:
+static const char leDataIn  = 4;
+static const char leDataOut = 5;
+static const char leAILog   = 6;
+static const char leComment = 7;
+
+/** The version header expected in the lig file. */
+static const char g_VersionHeader[] = "EBWLog\x00\x02";
+
 
 
 
@@ -43,9 +49,8 @@ QString LogFile::readFile(const QString & a_FileName)
 	}
 
 	// Check the version header:
-	static const char versionHeader[] = "EBWLog\x00\x01";
 	QByteArray hdr = f.read(8);
-	if (memcmp(hdr.constData(), versionHeader, 8) != 0)
+	if (memcmp(hdr.constData(), g_VersionHeader, 8) != 0)
 	{
 		return "File is from a different version";
 	}
@@ -125,6 +130,7 @@ QString LogFile::readFile(const QString & a_FileName)
 				}  // while (true)
 				break;
 			}
+
 			case leDataOut:
 			{
 				// Parse the data sent to the server:
@@ -143,6 +149,13 @@ QString LogFile::readFile(const QString & a_FileName)
 				}
 				break;
 			}
+
+			case leAILog:
+			{
+				// TODO: Add the AI log event
+				break;
+			}
+
 			case leComment:
 			{
 				// Add the data as a comment
