@@ -54,6 +54,17 @@ protected:
 
 	/** Paints the bot commands using the specified painter. */
 	void paintBotCommands(QPainter & a_Painter);
+
+	QSize minimumSizeHint() const
+	{
+		return QSize(900, 600);
+	}
+
+	QSize maximumSizeHint() const
+	{
+		return QSize(900, 600);
+	}
+
 };
 
 

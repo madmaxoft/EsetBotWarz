@@ -73,6 +73,8 @@ public:
 	quint64 getGameStartTime(void) const { return m_GameStartTime; }
 	quint64 getTotalTime(void) const { return m_TotalTime; }
 
+	QString getLabel(void) const { return m_Player1Name + " vs. " + m_Player2Name; }
+
 protected:
 	/** Name of the first player. */
 	QString m_Player1Name;

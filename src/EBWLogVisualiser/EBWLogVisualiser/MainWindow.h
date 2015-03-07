@@ -42,9 +42,10 @@ private slots:
 
 	void on_actExit_triggered();
 
-	void on_gameList_itemSelectionChanged();
-
 	void on_gameTimeline_currentTimeChanged(quint64 a_CurrentTime);
+
+	/** An item from the Games menu has been triggered by the user. */
+	void onGameItemTriggered(void);
 
 private:
 	Ui::MainWindow * ui;

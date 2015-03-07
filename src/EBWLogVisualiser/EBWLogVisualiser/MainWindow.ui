@@ -6,15 +6,18 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1045</width>
-    <height>695</height>
+    <width>1067</width>
+    <height>793</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>ESET BotWarz log parser</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <property name="spacing">
+     <number>0</number>
+    </property>
     <property name="leftMargin">
      <number>0</number>
     </property>
@@ -28,33 +31,14 @@
      <number>0</number>
     </property>
     <item>
-     <widget class="QSplitter" name="splitter_2">
-      <property name="midLineWidth">
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="spacing">
        <number>2</number>
       </property>
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
+      <property name="sizeConstraint">
+       <enum>QLayout::SetMinimumSize</enum>
       </property>
-      <property name="handleWidth">
-       <number>8</number>
-      </property>
-      <widget class="QListWidget" name="gameList"/>
-      <widget class="QSplitter" name="splitter">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-         <horstretch>1</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="midLineWidth">
-        <number>2</number>
-       </property>
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-       <property name="handleWidth">
-        <number>8</number>
-       </property>
+      <item>
        <widget class="TimelineControl" name="gameTimeline" native="true">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -65,13 +49,15 @@
         <property name="minimumSize">
          <size>
           <width>100</width>
-          <height>10</height>
+          <height>20</height>
          </size>
         </property>
        </widget>
+      </item>
+      <item>
        <widget class="GameDisplay" name="gameDisplay" native="true">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>1</verstretch>
          </sizepolicy>
@@ -82,9 +68,25 @@
           <height>600</height>
          </size>
         </property>
+        <property name="maximumSize">
+         <size>
+          <width>1000000</width>
+          <height>600</height>
+         </size>
+        </property>
        </widget>
-      </widget>
-     </widget>
+      </item>
+      <item>
+       <widget class="QListWidget" name="textLog">
+        <property name="minimumSize">
+         <size>
+          <width>200</width>
+          <height>50</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
@@ -93,7 +95,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1045</width>
+     <width>1067</width>
      <height>18</height>
     </rect>
    </property>
@@ -105,7 +107,16 @@
     <addaction name="separator"/>
     <addaction name="actExit"/>
    </widget>
+   <widget class="QMenu" name="menu_Games">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="title">
+     <string>&amp;Games</string>
+    </property>
+   </widget>
    <addaction name="menu_File"/>
+   <addaction name="menu_Games"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actFileOpen">
@@ -148,4 +159,7 @@
  </customwidgets>
  <resources/>
  <connections/>
+ <slots>
+  <signal>on_actFileOpen_triggered()</signal>
+ </slots>
 </ui>

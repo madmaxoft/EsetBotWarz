@@ -152,7 +152,9 @@ QString LogFile::readFile(const QString & a_FileName)
 
 			case leAILog:
 			{
-				// TODO: Add the AI log event
+				// Add the AI log event
+				char botID = ba[0];
+				curGameState->addAILog(timeStamp, botID, QString::fromLocal8Bit(ba.constData() + 1));
 				break;
 			}
 

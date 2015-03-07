@@ -60,3 +60,14 @@ BotPtr GameState::getBotByID(int a_BotID)
 
 
 
+
+void GameState::addAILog(quint64 a_ClientTime, int a_BotID, const QString & a_Text)
+{
+	a_ClientTime;
+
+	m_AILogs.push_back(QString("#%1: %2").arg(a_BotID).arg(a_Text));
+}
+
+
+
+

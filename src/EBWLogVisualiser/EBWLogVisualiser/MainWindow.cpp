@@ -20,6 +20,7 @@ MainWindow::MainWindow(QWidget * parent) :
 	ui(new Ui::MainWindow)
 {
 	ui->setupUi(this);
+	this->showMaximized();
 }
 
 
@@ -44,24 +45,31 @@ void MainWindow::loadFile(const QString & a_FileName)
 		QMessageBox::warning(this, tr("Error"), err);
 		return;
 	}
+	m_LogFile = logFile;
 
-	// Set the games to the game list:
-	ui->gameList->clear();
+	// Set the games to the games menu:
+	ui->menu_Games->clear();
+	auto actGroup = new QActionGroup(this);
 	int idx = 0;
 	for (auto & game: logFile->getGames())
 	{
-		auto item = new QListWidgetItem(game->getPlayer1Name() + " vs. " + game->getPlayer2Name());
-		item->setData(Qt::UserRole, idx++);
-		ui->gameList->addItem(item);
+		auto act = new QAction(game->getLabel(), nullptr);
+		connect(act, SIGNAL(triggered()), this, SLOT(onGameItemTriggered()));
+		act->setCheckable(true);
+		act->setActionGroup(actGroup);
+		act->setProperty("gameIndex", idx++);
+		if (idx <= 9)
+		{
+			act->setShortcut(QKeySequence(QString("Ctrl+%1").arg(idx)));
+		}
+		ui->menu_Games->addAction(act);
+		if (idx == 1)
+		{
+			act->setChecked(true);
+			act->trigger();
+		}
 	}
-
-	m_LogFile = logFile;
-
-	// Select the first game:
-	if (ui->gameList->count() > 0)
-	{
-		ui->gameList->item(0)->setSelected(true);
-	}
+	ui->menu_Games->setEnabled(!logFile->getGames().empty());
 }
 
 
@@ -91,23 +99,9 @@ void MainWindow::on_actExit_triggered()
 
 
 
-void MainWindow::on_gameList_itemSelectionChanged()
-{
-	auto sel = ui->gameList->selectedItems();
-	if (sel.isEmpty())
-	{
-		return;
-	}
-	m_CurrentGame = m_LogFile->getGames()[sel.front()->data(Qt::UserRole).toInt()];
-	ui->gameTimeline->setGame(m_CurrentGame);
-}
-
-
-
-
-
 void MainWindow::on_gameTimeline_currentTimeChanged(quint64 a_CurrentTime)
 {
+	// Display the time information in the status bar:
 	auto gameState = m_CurrentGame->getGameStateAt(a_CurrentTime);
 	ui->gameDisplay->setGameState(gameState);
 	auto botCommands = m_CurrentGame->getBotCommandsAt(a_CurrentTime);
@@ -117,6 +111,22 @@ void MainWindow::on_gameTimeline_currentTimeChanged(quint64 a_CurrentTime)
 		.arg(static_cast<double>(a_CurrentTime) / 1000)
 		.arg(gameTime)
 	);
+
+	// Display the text logs:
+	ui->textLog->clear();
+	ui->textLog->addItems(gameState->m_AILogs);
+}
+
+
+
+
+
+void MainWindow::onGameItemTriggered(void)
+{
+	// Determine which game item it was:
+	auto idx = sender()->property("gameIndex").toInt();
+	m_CurrentGame = m_LogFile->getGames()[idx];
+	ui->gameTimeline->setGame(m_CurrentGame);
 }
 
 

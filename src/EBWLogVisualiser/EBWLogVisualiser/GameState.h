@@ -7,7 +7,7 @@
 
 #include <memory>
 #include <vector>
-#include <qglobal.h>
+#include <QStringList>
 
 
 
@@ -41,6 +41,9 @@ public:
 	/** States of each bot in the game. */
 	BotPtrs m_Bots;
 
+	/** The AI log items reported within this gamestate. */
+	QStringList m_AILogs;
+
 
 	/** Creates a new instance with default values. */
 	GameState(void);
@@ -51,6 +54,9 @@ public:
 
 	/** Returns the bot out of m_Bots that has the specified ID, or nullptr if no such bot. */
 	BotPtr getBotByID(int a_BotID);
+
+	/** Adds a new AI log to the m_AILogs list. */
+	void addAILog(quint64 a_ClientTime, int a_BotID, const QString & a_Text);
 };
 
 typedef std::shared_ptr<GameState> GameStatePtr;
