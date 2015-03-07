@@ -86,7 +86,14 @@ void Game::finish(quint64 a_ClientTime, const QJsonValue & a_Json)
 		}
 	);
 
-	// TODO: Sort the botcommands by their time:
+	// Sort the botcommands by their time:
+	std::sort(m_BotCommands.begin(), m_BotCommands.end(),
+		[=](BotCommandsPtr & a_First, BotCommandsPtr & a_Second)
+		{
+			return (a_First->m_ClientTime < a_Second->m_ClientTime);
+		}
+	);
+
 	// TODO: Sort the comments by their time
 	// TODO: Set the winner name and the score
 }
