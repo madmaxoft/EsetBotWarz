@@ -69,6 +69,12 @@ public:
 	/** Returns a copy of the m_AllBots field, in a thread-safe way. */
 	BotIDMap getAllBotsCopy(void) const;
 
+	/** Returns the local timestamp of the game start. */
+	std::chrono::system_clock::time_point getLocalGameStartTime(void) const { return m_LocalGameStartTime; }
+
+	/** Returns the server time of the last update. */
+	int getServerTime(void) const { return m_ServerTime; }
+
 protected:
 	/** The parent App object. */
 	BotWarzApp & m_App;
@@ -99,6 +105,12 @@ protected:
 
 	/** The mutex protecting m_MyBots, m_EnemyBots and m_AllBots against multithreaded access. */
 	mutable cCriticalSection m_CSBots;
+
+	/** The local timestamp of the game start. */
+	std::chrono::system_clock::time_point m_LocalGameStartTime;
+
+	/** The server time of the last update. */
+	int m_ServerTime;
 };
 
 

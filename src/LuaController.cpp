@@ -82,6 +82,7 @@ public:
 		createEmptySubTable("botCommands");
 		createAllBotTable();
 		createAPIFunctions();
+		updateGameBoardTime();
 
 		m_LuaState.call("onGameStarted", &m_GameBoardTable);
 	}
@@ -95,6 +96,7 @@ public:
 	{
 		// Update the bots in the board representation table:
 		cCSLock Lock(m_CSLuaState);
+		updateGameBoardTime();
 		lua_rawgeti(m_LuaState, LUA_REGISTRYINDEX, m_GameBoardTable);  // Stack: [GBT]
 		lua_getfield(m_LuaState, -1, "allBots");                       // Stack: [GBT] [allBots]
 		auto bots = m_Board->getAllBotsCopy();
@@ -127,6 +129,7 @@ public:
 	virtual void onGameFinished(void) override
 	{
 		cCSLock Lock(m_CSLuaState);
+		updateGameBoardTime();
 		m_LuaState.call("onGameFinished", &m_GameBoardTable);
 		m_GameBoardTable.unRef();
 	}
@@ -140,6 +143,7 @@ public:
 	{
 		// Call the callback:
 		cCSLock Lock(m_CSLuaState);
+		updateGameBoardTime();
 		m_LuaState.call("onBotDied", &m_GameBoardTable, a_Bot.m_ID);
 
 		// Remove the bot from the Lua tables:
@@ -160,15 +164,22 @@ public:
 	{
 		Json::Value res(Json::arrayValue);
 
+		// Get the bots before locking the Lua State (to avoid deadlocks):
+		auto myBots = m_Board->getMyBotsCopy();
+		updateGameBoardTime();
+
 		// Check that the Lua state is valid:
 		cCSLock Lock(m_CSLuaState);
 		if (!m_GameBoardTable.isValid())
 		{
 			return res;
 		}
-		lua_rawgeti(m_LuaState, LUA_REGISTRYINDEX, m_GameBoardTable);
+
+		// Call the pre-getCommands callback:
+		m_LuaState.call("onSendingCommands", &m_GameBoardTable);
 
 		// Get the botCommands table:
+		lua_rawgeti(m_LuaState, LUA_REGISTRYINDEX, m_GameBoardTable);
 		lua_getfield(m_LuaState, -1, "botCommands");
 		if (lua_isnil(m_LuaState, -1))
 		{
@@ -177,7 +188,6 @@ public:
 		}
 
 		// For each of my currently alive bots, get its command:
-		auto myBots = m_Board->getMyBotsCopy();
 		for (auto & bot : myBots)
 		{
 			lua_rawgeti(m_LuaState, -1, bot->m_ID);  // Stack: [GBT] [botCommands] [bot]
@@ -476,6 +486,22 @@ protected:
 		lua_setfield(m_LuaState, LUA_GLOBALSINDEX, "commLog");  // OBSOLETE, but still available in the API
 		lua_pushcfunction(m_LuaState, &aiLog);
 		lua_setfield(m_LuaState, LUA_GLOBALSINDEX, "aiLog");
+	}
+
+
+
+
+
+	/** Updates the local and server time stored in the GameBoard table. */
+	void updateGameBoardTime(void)
+	{
+		lua_rawgeti(m_LuaState, LUA_REGISTRYINDEX, m_GameBoardTable);
+		lua_pushnumber(m_LuaState, m_Board->getServerTime());
+		lua_setfield(m_LuaState, -2, "serverTime");
+		auto localTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - m_Board->getLocalGameStartTime()).count();
+		lua_pushnumber(m_LuaState, static_cast<lua_Number>(localTime));
+		lua_setfield(m_LuaState, -2, "localTime");
+		lua_pop(m_LuaState, 1);
 	}
 };
 

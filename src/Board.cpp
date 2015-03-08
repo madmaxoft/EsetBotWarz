@@ -61,6 +61,9 @@ void Board::initialize(const Json::Value & a_GameData)
 			m_AllBots[botItem->m_ID] = botItem;
 		}  // for itrB - bots[]
 	}  // for itrP - players[]
+
+	// Set the local game start time:
+	m_LocalGameStartTime = std::chrono::system_clock::now();
 }
 
 
@@ -69,6 +72,9 @@ void Board::initialize(const Json::Value & a_GameData)
 
 void Board::updateFromJson(const Json::Value & a_GameData)
 {
+	// Update the server time:
+	m_ServerTime = a_GameData["time"].asInt();
+
 	// Update the bot arrays
 	cCSLock Lock(m_CSBots);
 	std::vector<int> presentIDs;
