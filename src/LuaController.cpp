@@ -355,6 +355,7 @@ protected:
 		L.getStackValue(-1, panicString);
 		LOGERROR("%s", panicString.c_str());
 		L.logStackTrace();
+		ASSERT(!"LUA PANIC");
 		return 1;
 	}
 
