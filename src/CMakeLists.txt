@@ -11,6 +11,7 @@ SET (SRCS
 	Bot.cpp
 	BotWarzApp.cpp
 	Comm.cpp
+	Logger.cpp
 	LuaState.cpp
 	LuaController.cpp
 	Globals.cpp
@@ -24,6 +25,7 @@ SET (HDRS
 	BotWarzApp.h
 	Comm.h
 	Controller.h
+	Logger.h
 	LuaState.h
 	LuaController.h
 	Globals.h
