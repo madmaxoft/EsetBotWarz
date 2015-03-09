@@ -61,12 +61,15 @@ if (NOT EXISTS ${CMAKE_SOURCE_DIR}/lib/libevent/CMakeLists.txt)
 	message(FATAL_ERROR "LibEvent is missing in folder lib/libevent. Have you initialized and updated the submodules / downloaded the extra libraries?")
 endif()
 
+# Add the LibEvent library:
+add_subdirectory(lib/libevent/)
+
 # Add proper includes for LibEvent's event-config.h header:
 include_directories(SYSTEM ${LIBEVENT_INCLUDE_DIRS})
 
+
 # Include all the libraries:
 add_subdirectory(lib/jsoncpp/)
-add_subdirectory(lib/libevent/)
 add_subdirectory(lib/lua/)
 if (WIN32)
 	add_subdirectory(lib/luaproxy/)
@@ -76,7 +79,7 @@ add_subdirectory(lib/Network/)
 
 
 # Finally include the main app sources:
-add_subdirectory (src)
+add_subdirectory(src)
 
 
 

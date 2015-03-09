@@ -61,7 +61,7 @@ bool Logger::init(bool a_ShouldLogComm, bool a_ShouldShowComm)
 	#ifdef _WIN32
 		m_BinCommLogFile = _fsopen(fileNameBase.c_str(), "wb", _SH_DENYWR);
 	#else
-		m_BinCommLogFile = _fopen(fileNameBase.c_str(), "wb");
+		m_BinCommLogFile = fopen(fileNameBase.c_str(), "wb");
 	#endif
 	fwrite(g_VersionHeader, sizeof(g_VersionHeader) - 1, 1, m_BinCommLogFile);  // g_VersionHeader variable is zero-terminated, don't output the terminator
 
