@@ -327,7 +327,11 @@ void inline LOG(const char * a_Format, ...)
 #define KiB * 1024
 #define MiB * 1024 * 1024
 
-#define ASSERT assert
+#ifdef _DEBUG
+	#define ASSERT assert
+#else
+	#define ASSERT(...)
+#endif
 
 // Pretty much the same as ASSERT() but stays in Release builds
 #define VERIFY(x) (!!(x) || (LOGERROR("Verification failed: %s, file %s, line %i", #x, __FILE__, __LINE__), /* PrintStackTrace(), */ exit(1), 0))
