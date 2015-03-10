@@ -104,6 +104,11 @@ void Game::finish(quint64 a_ClientTime, const QJsonValue & a_Json)
 
 GameStatePtr Game::getGameStateAt(quint64 a_RelClientTime)
 {
+	if (m_GameStates.empty())
+	{
+		return nullptr;
+	}
+
 	a_RelClientTime += m_GameStartTime;
 	for (auto itr = m_GameStates.cbegin(), end = m_GameStates.cend(), prevItr = itr; itr != end; ++itr)
 	{
@@ -126,6 +131,11 @@ GameStatePtr Game::getGameStateAt(quint64 a_RelClientTime)
 
 BotCommandsPtr Game::getBotCommandsAt(quint64 a_RelClientTime)
 {
+	if (m_BotCommands.empty())
+	{
+		return nullptr;
+	}
+
 	a_RelClientTime += m_GameStartTime;
 	for (auto itr = m_BotCommands.cbegin(), end = m_BotCommands.cend(), prevItr = itr; itr != end; ++itr)
 	{
