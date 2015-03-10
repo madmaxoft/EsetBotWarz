@@ -91,7 +91,7 @@ bool Comm::init(void)
 {
 	// Connect to the server:
 	auto callbacks = std::make_shared<Callbacks>(*this);
-	if (!cNetwork::Connect("botwarz.eset.com", 2000, callbacks, callbacks))
+	if (!cNetwork::Connect("botwarz.eset.com", 8080, callbacks, callbacks))
 	{
 		m_Status = csError;
 		LOGERROR("Cannot connect to server");
