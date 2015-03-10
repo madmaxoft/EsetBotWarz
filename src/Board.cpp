@@ -46,7 +46,7 @@ void Board::initialize(const Json::Value & a_GameData)
 	for (auto itrP = players.begin(), endP = players.end(); itrP != endP; ++itrP)
 	{
 		auto & player = *itrP;
-		bool isEnemy = (player["nickname"] != m_App.getLoginNick());
+		bool isEnemy = (NoCaseCompare(player["nickname"].asString(), m_App.getLoginNick()) != 0);
 		if (isEnemy)
 		{
 			m_EnemyName = player["nickname"].asString();
