@@ -166,7 +166,6 @@ public:
 
 		// Get the bots before locking the Lua State (to avoid deadlocks):
 		auto myBots = m_Board->getMyBotsCopy();
-		updateGameBoardTime();
 
 		// Check that the Lua state is valid:
 		cCSLock Lock(m_CSLuaState);
@@ -174,6 +173,7 @@ public:
 		{
 			return res;
 		}
+		updateGameBoardTime();
 
 		// Call the pre-getCommands callback:
 		m_LuaState.call("onSendingCommands", &m_GameBoardTable);
@@ -496,6 +496,8 @@ protected:
 	/** Updates the local and server time stored in the GameBoard table. */
 	void updateGameBoardTime(void)
 	{
+		ASSERT(m_CSLuaState.IsLockedByCurrentThread());
+
 		lua_rawgeti(m_LuaState, LUA_REGISTRYINDEX, m_GameBoardTable);
 		lua_pushnumber(m_LuaState, m_Board->getServerTime());
 		lua_setfield(m_LuaState, -2, "serverTime");

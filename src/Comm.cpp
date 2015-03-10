@@ -396,9 +396,22 @@ void Comm::processResult(const Json::Value & a_Response)
 		return;
 	}
 	
-	LOG("Game finished. Winner: %s", a_Response["result"]["winner"]["nickname"].asCString());
+	if (a_Response["result"].isMember("winner"))
+	{
+		LOG("Game finished. Winner: %s", a_Response["result"]["winner"]["nickname"].asCString());
+	}
+	else
+	{
+		LOG("Game finished. Draw.");
+	}
 	m_App.finishGame(a_Response["result"]);
 	m_Status = csIdle;
+
+	// Wake up the command sender thread, if it was waiting to send a command:
+	if ((m_LastReceivedCmdId != m_LastSentCmdId))
+	{
+		m_evtCommandIdMatch.Set();
+	}
 }
 
 
