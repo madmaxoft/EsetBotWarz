@@ -68,6 +68,10 @@ QString LogFile::readFile(const QString & a_FileName)
 		f.read(reinterpret_cast<char *>(&len), 4);
 		len = qFromBigEndian(len);
 		QByteArray ba = f.read(len);
+		if (ba.length() != len)
+		{
+			return m_Games.empty() ? "Incomplete file" : "";  // Ignore errors if there is at least one game
+		}
 		switch (kind)
 		{
 			case leDataIn:
@@ -86,7 +90,7 @@ QString LogFile::readFile(const QString & a_FileName)
 					auto json = QJsonDocument::fromJson(incomingDataBuffer.left(lineEnd));
 					if (!json.isObject())
 					{
-						return "Parse error";
+						return m_Games.empty() ? "Parse error" : "";  // Ignore errors if there is at least one game
 					}
 					auto jsonObj = json.object();
 					incomingDataBuffer.remove(0, lineEnd + 1);
@@ -137,7 +141,7 @@ QString LogFile::readFile(const QString & a_FileName)
 				auto json = QJsonDocument::fromJson(ba);
 				if (!json.isObject())
 				{
-					return "Parse error";
+						return m_Games.empty() ? "Parse error" : "";  // Ignore errors if there is at least one game
 				}
 				auto jsonObj = json.object();
 
